@@ -853,13 +853,13 @@ export const RECIPE_DATA = {
     notes: '',
   },
   'poi': {
-    name: 'Fresh Poi with Lomi Onions',
+    name: 'Fresh Poi',
     providedBy: '',
     isHostProvided: false,
     imageUrl: '/images/poi.jpg',
-    description: 'Pounded taro root (kalo) fermented to desired sourness, served with lomi onions - the starch of Hawaii.',
+    description: 'Pounded taro root (kalo) fermented to desired sourness - the starch of Hawaii.',
     recipes: [
-      { name: 'How to Make Poi', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/how-to-make-poi/' },
+      { name: 'How to Make Poi', source: 'Taste of Home', url: 'https://www.tasteofhome.com/article/what-is-poi/' },
     ],
     variations: [
       'One-finger, two-finger, three-finger consistency',
@@ -969,10 +969,10 @@ export const RECIPE_DATA = {
     name: 'Baked Pineapple Fried Rice in Pineapple Boat',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: '/images/rice.jpg',
+    imageUrl: '/images/pineapple-rice.jpg',
     description: 'Fragrant fried rice with pineapple chunks, shrimp, chicken, cashews, curry powder - served in a hollowed pineapple half.',
     recipes: [
-      { name: 'Pineapple Fried Rice', source: 'Hot Thai Kitchen', url: 'https://hotthaikitchen.com/pineapple-fried-rice-khao-pad-sapparot/' },
+      { name: 'Pineapple Fried Rice', source: 'Cookie and Kate', url: 'https://cookieandkate.com/thai-pineapple-fried-rice-recipe/' },
     ],
     variations: [
       'Use day-old jasmine rice',
@@ -1039,7 +1039,7 @@ export const RECIPE_DATA = {
     imageUrl: '/images/guava-chiffon.jpg',
     description: 'Light-as-air chiffon cake infused with guava puree - a Hawaiian bakery classic.',
     recipes: [
-      { name: 'Hawaiian Guava Cake', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/guava-cake/' },
+      { name: 'Hawaiian Guava Cake', source: 'Guava Rose', url: 'https://www.guavarose.com/2013/12/guava-chiffon-cake/' },
     ],
     variations: [
       'Use guava nectar or fresh puree',
@@ -1150,13 +1150,13 @@ export const RECIPE_DATA = {
     notes: 'Kids love these! Great non-alcoholic option.',
   },
   'kona-coffee': {
-    name: 'Kona Coffee & Hot Tea Station',
+    name: 'Coffee & Hot Tea Station',
     providedBy: '',
     isHostProvided: false,
     imageUrl: '/images/kona-coffee.jpg',
-    description: '100% Kona coffee (medium roast) + assortment of hot teas (mamaki, jasmine, chamomile, mint).',
+    description: 'Coffee (light & medium roast) + assortment of hot teas (jasmine, chamomile, mint).',
     recipes: [
-      { name: 'How to Brew Kona Coffee', source: 'Kona Coffee Council', url: 'https://konacoffeecouncil.com/brew-guide/' },
+      { name: 'How to Brew Coffee', source: 'Chemex', url: 'https://chemex-canada.ca/blogs/news/chemex-brew-guide' },
     ],
     variations: [
       'French press or pour-over for best flavor',
@@ -1166,13 +1166,13 @@ export const RECIPE_DATA = {
     notes: '',
   },
   'guava-juice': {
-    name: 'Fresh POG & Guava Juice Bar',
+    name: 'Fresh Guava Juice Bar',
     providedBy: '',
     isHostProvided: false,
     imageUrl: '/images/guava-juice.jpg',
     description: 'Fresh-pressed guava nectar and POG (Passion Orange Guava) - served over ice with sparkling water option.',
     recipes: [
-      { name: 'Homemade POG Juice', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/pog-juice/' },
+      { name: 'Homemade POG Juice', source: 'That Girl Cooks Healthy', url: 'https://thatgirlcookshealthy.com/guava-juice-recipe/' },
     ],
     variations: [
       'Dilute with water or sparkling water',
