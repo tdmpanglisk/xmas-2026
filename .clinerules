@@ -1,48 +1,33 @@
 # ==============================================================================
-# GLOBAL WORKSPACE PROTECTION & WINDOWS CMD CONFIGURATION
+# GLOBAL WORKSPACE PROTECTION & WINDOWS CONFIGURATION FOR CLINE
 # ==============================================================================
 
 # 🛑 STRICT FILE & DIRECTORY EXCLUSIONS
 - NEVER attempt to read, write, scan, list, or modify files inside the 'src/data/' directory. It is strictly ignored to prevent context bloating and parsing crashes.
 
 # ⚡ CRITICAL WORKFLOW & EDIT LIMITS
-- You are consistently hitting "edit is too large" errors by trying to rewrite large code blocks or full files.
 - You are STRICTLY FORBIDDEN from rewriting entire files or multi-component chunks.
-- You MUST use tiny, pinpoint surgical search-and-replace blocks for all modifications.
+- You MUST use your built-in `replace_in_file` tool for tiny, pinpoint surgical search-and-replace blocks. 
 - If a file is too monolithic to edit surgically, you must explicitly ask the user for permission to split it into smaller, modular files first.
+- On block match errors, re-read the file to get the exact text instead of creating a new one or guessing.
 
-# 🖥️ WINDOWS CMD TERMINAL RULES (NEVER VIOLATE)
-- HOST ENVIRONMENT: You are running inside a standard Windows Command Prompt (cmd.exe) integrated terminal environment.
-- FORBIDDEN SHELL COMMANDS: Never use Linux/macOS commands such as 'ls', 'touch', 'wc', 'head', 'tail', 'grep', 'cat', 'rm -rf', or 'mkdir -p'.
-- FORBIDDEN POWERSHELL SYNTAX: Never use PowerShell-specific commands, cmdlets (like 'Select-String'), or terminal chaining sequences like '&&' if the terminal environment switches. Run terminal operations sequentially.
+# 🪟 WINDOWS TERMINAL RULES (NEVER VIOLATE)
+- HOST ENVIRONMENT: You are running on a Windows machine in CMD. You must format all terminal commands for Windows compatibility.
+- NO LINUX COMMANDS: Never use `ls`, `touch`, `cp`, `mv`, `rm -rf`, `grep`, `cat`, `mkdir -p`, or `export`.
+- WINDOWS EQUIVALENTS ONLY: 
+  - Instead of `ls`, use `dir`
+  - Instead of `cat`, use `type`
+  - Instead of `rm -rf`, use `rmdir /s /q`
+  - Instead of `export VAR=value`, use `set VAR=value`
+  - Use backslashes (`\`) for file paths in native CMD commands.
+- ANTI-HANG PRECAUTION: NEVER execute commands that prompt for user input (e.g., [Y/n] confirmations). Always append `-y`, `--yes`, `--quiet`, or `echo y |` to ensure commands run non-interactively.
+- RIPGREP SEARCHING: To search for text inside files, use the globally accessible ripgrep binary at: `C:\ProgramData\chocolatey\bin\rg.exe`
 
-# 🔄 NATIVE COMMAND REPLACEMENTS
-- DIRECTORY LISTINGS: Use the native 'dir' command instead of 'ls' or 'ls -la'.
-- FILE INSPECTION: Prioritize using your built-in 'read_file' tool rather than executing terminal commands to inspect files. If you absolutely must use the terminal, use the native Windows 'more' command, or write a short Python script wrapper to chunk read the lines.
-- FILE CREATION: Instead of 'touch', create empty files using a native Python script or direct redirection methods.
+# 🚫 THE "NO PYTHON SCRIPTING" RULE
+- STRICTLY FORBIDDEN: You must NEVER create temporary Python scripts (like `temp_run.py`) or use `python -c` to perform file modifications, read files, or execute system tasks. 
+- USE BUILT-IN TOOLS: You must strictly use your native tools (`read_file`, `write_to_file`, `replace_in_file`, `execute_command`) for all file and system operations.
 
-# 🔍 TEXT SEARCH CONFIGURATION (RIPGREP)
-- To search for text inside files, you must use the globally accessible ripgrep binary located at the exact system path:
-  C:\ProgramData\chocolatey\bin\rg.exe
-- Explicitly format your text search tool calls using this execution executable path to avoid generic shell searching errors.
-
-# 🪟 THE PYTHON ESCAPE HATCH & INLINE RULES
-- Always double-check your command line syntax before execution to verify it is fully compatible with native Windows cmd.exe.
-- STRICTLY FORBIDDEN SYNTAX: Never use "python -c" to execute inline code snippets in the terminal. Windows cmd.exe mishandles nested quotes inside quotes and will consistently crash the script.
-- SAFE SCRIPTING EXECUTION: If you need to run a Python snippet or perform a file operation, you MUST write the code to a temporary file (e.g., `temp_run.py`) and then execute it via "python temp_run.py". Delete the file when finished.
-- If any terminal command fails with a "not recognized as an internal or external command" or access error, DO NOT attempt alternative terminal workarounds. Instantly pivot to writing a tiny Python file to perform the action natively.
-
-### File Editing Rules
-- Prioritize `replace_in_file` for updates and avoid creating temporary Python scripts for modifications.
-- Keep `write_to_file` restricted to files under 50 lines, and break complex edits into chunks under 6,000 characters.
-- On block match errors, re-read the file instead of creating a new one.
-
-### Cross-Platform & Environment Rules
-- **Windows Shell Restrictions:** Always use standard PowerShell syntax (`Get-Content`, `Remove-Item`, `$env:VAR`) or CMD equivalents. 
-- **Command Restrictions:** Strictly NEVER use `python -c` or `cat` for file writing, manipulation, or verification, as they fail on Windows environments.
-- **Search Tooling:** Use native `ripgrep` configurations for multi-file searches. Do not invoke custom search scripts.
-
-### Task Execution & Workflow Strategy
-- **Surgical Code Modifications:** Modify existing files block-by-block using small, targeted chunks. Do not rewrite unaffected code.
-- **State Verification:** After any file modification, run a quick syntax check or test compilation immediately to verify code integrity before moving to the next task.
-- **Token Optimization:** When maximum token limits or the 6,000-character edit limit are approached, pause operations and explicitly prompt the user for permission to proceed or split the task.
+# 🔄 TASK EXECUTION & WORKFLOW STRATEGY
+- SURGICAL EDITS: Modify existing files block-by-block using small, targeted chunks under 6,000 characters. Keep `write_to_file` restricted to new files or files under 50 lines.
+- STATE VERIFICATION: After any file modification, run a quick syntax check or test compilation immediately to verify code integrity before moving to the next task.
+- TOKEN OPTIMIZATION: When maximum token limits or the 6,000-character edit limit are approached, pause operations and explicitly prompt the user for permission to proceed or split the task.
