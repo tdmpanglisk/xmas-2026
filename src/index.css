@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@theme {
+  --color-xmas-red: #C41E3A;
+  --color-xmas-darkred: #8B1538;
+  --color-xmas-green: #2D5A27;
+  --color-xmas-darkgreen: #1B3A1B;
+  --color-xmas-gold: #D4A843;
+  --color-xmas-cream: #FDF6E3;
+  --color-xmas-snow: #FFFFFF;
+  --color-xmas-night: #0D1B2A;
+  
+  --font-display: "Playfair Display", serif;
+  --font-body: "Inter", sans-serif;
+  
+  --animate-snow-fall: snowFall 10s linear infinite;
+  --animate-twinkle: twinkle 2s ease-in-out infinite;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  
+  @keyframes snowFall {
+    0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-xmas-night text-xmas-cream font-body antialiased;
+    margin: 0;
+    min-height: 100vh;
+  }
+  * {
+    @apply border-xmas-darkred;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-xmas-red hover:bg-xmas-darkred text-xmas-cream font-semibold px-8 py-3 rounded-full 
+           transition-all duration-300 transform hover:scale-105 hover:shadow-lg 
+           shadow-xmas-red/30 focus:outline-none focus:ring-2 focus:ring-xmas-gold focus:ring-offset-2 focus:ring-offset-xmas-night;
+  }
+  .btn-secondary {
+    @apply bg-xmas-green hover:bg-xmas-darkgreen text-xmas-cream font-semibold px-8 py-3 rounded-full 
+           transition-all duration-300 transform hover:scale-105 hover:shadow-lg 
+           shadow-xmas-green/30 focus:outline-none focus:ring-2 focus:ring-xmas-gold focus:ring-offset-2 focus:ring-offset-xmas-night;
+  }
+  .btn-gold {
+    @apply bg-xmas-gold hover:bg-yellow-600 text-xmas-night font-semibold px-8 py-3 rounded-full 
+           transition-all duration-300 transform hover:scale-105 hover:shadow-lg 
+           shadow-xmas-gold/40 focus:outline-none focus:ring-2 focus:ring-xmas-gold focus:ring-offset-2 focus:ring-offset-xmas-night;
+  }
+  .card {
+    @apply bg-xmas-night/80 backdrop-blur-sm border border-xmas-darkred/50 rounded-2xl p-6 
+           shadow-xl shadow-black/30 transition-all duration-300 hover:border-xmas-gold/50 hover:shadow-2xl;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 bg-xmas-night/50 border border-xmas-darkred/50 rounded-xl 
+           text-xmas-cream placeholder-xmas-cream/40 focus:outline-none focus:ring-2 focus:ring-xmas-gold 
+           focus:border-transparent transition-all duration-200;
+  }
+  .label {
+    @apply block text-sm font-medium text-xmas-gold mb-2;
+  }
+  .section-title {
+    @apply font-display text-3xl md:text-4xl lg:text-5xl text-xmas-gold text-center mb-4 relative;
+  }
+  .section-title::after {
+    @apply content-[''] absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-xmas-red to-xmas-gold rounded-full;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .bg-snow-pattern {
+    background-image: radial-gradient(circle at 20% 20%, rgba(212, 168, 67, 0.1) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 80%, rgba(196, 30, 58, 0.1) 0%, transparent 50%);
+  }
+}
+
+/* Snowflake animation */
+.snowflake {
+  @apply absolute text-white pointer-events-none animate-snow-fall;
+  animation-delay: calc(var(--delay, 0) * 1s);
+  animation-duration: calc(var(--duration, 10) * 1s);
+  font-size: var(--size, 12px);
+  opacity: var(--opacity, 0.6);
+}
+
+/* Twinkling stars */
+.star {
+  @apply absolute bg-xmas-gold rounded-full animate-twinkle;
+  animation-delay: calc(var(--delay, 0) * 1s);
+}
+
+/* Floating ornament */
+.ornament {
+  @apply animate-float;
+  animation-delay: calc(var(--delay, 0) * 1s);
+}
+
+/* Slide down animation for mobile menu */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-down { animation: slideDown 0.2s ease-out; }

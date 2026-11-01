@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Christmas 2026 Celebration - Join us for a magical holiday gathering!" />
+    <meta name="theme-color" content="#0D1B2A" />
+    <title>Christmas 2026 Celebration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Early error suppression for third-party scripts -->
+    <script>
+      window.addEventListener('error', function(e) {
+        if (e.filename && e.filename.includes('page-events.js')) {
+          e.preventDefault();
+          return false;
+        }
+        if (e.message && e.message.includes("Cannot read properties of undefined (reading 'length')")) {
+          e.preventDefault();
+          return false;
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason?.message?.includes('EmailJS') || e.reason?.message?.includes('422')) {
+          e.preventDefault();
+        }
+      }, true);
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
