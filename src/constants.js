@@ -695,13 +695,14 @@ export const FOOD_CATEGORIES = [
   },
 ]; 
 
-// Recipe data for potluck items - includes internet recipes, variations, images, and notes
+// Recipe data for potluck items - includes internet recipes, variations, verified direct images, and notes
+// Local image paths are applied at build time
 export const RECIPE_DATA = {
   'kalua-pig': {
     name: '🌺 Kālua Pig (Traditional Imu-Roasted with Lei)',
     providedBy: 'Host (Mah Family)',
     isHostProvided: true,
-    imageUrl: 'https://images.unsplash.com/photo-1627308595229-7830b5c96471?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/kalua-pig.jpg',
     description: 'The centerpiece of our luau - traditionally cooked in an imu (underground oven) for 12+ hours until fall-apart tender, infused with mesquite smoke and ti leaf essence.',
     recipes: [
       { name: '3-Ingredient Kalua Pork (Oven or Instant Pot)', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/kalua-pork/' },
@@ -719,7 +720,7 @@ export const RECIPE_DATA = {
     name: 'Huli Huli Chicken (Grilled Pineapple Glaze)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/huli-huli-chicken.jpg',
     description: 'Classic Hawaiian grilled chicken basted in sweet-savory pineapple-soy glaze, turned ("huli") repeatedly over charcoal.',
     recipes: [
       { name: 'Authentic Huli Huli Chicken', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/huli-huli-chicken/' },
@@ -737,7 +738,7 @@ export const RECIPE_DATA = {
     name: 'Lau Lau (Pork & Fish Wrapped in Luau & Ti Leaves)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/lau-lau.jpg',
     description: 'Traditional Hawaiian dish - pork butt and butterfish wrapped in luau (taro) leaves, then ti leaves, steamed until meltingly tender.',
     recipes: [
       { name: 'Crock Pot Laulau', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/crock-pot-laulau/' },
@@ -754,7 +755,7 @@ export const RECIPE_DATA = {
     name: 'Vegetarian Lau Lau (Tofu, Sweet Potato, Taro Leaf)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/tofu-lau-lau.jpg',
     description: 'Plant-based take on the classic - firm tofu, sweet potato, and mushrooms wrapped in taro and ti leaves.',
     recipes: [
       { name: 'Local-Style Chicken Tofu (Can easily sub all Tofu)', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/chicken-tofu/' },
@@ -770,7 +771,7 @@ export const RECIPE_DATA = {
     name: 'Grilled Mahi-Mahi with Macadamia Nut Crust',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/grilled-mahi.jpg',
     description: 'Fresh Hawaiian mahi-mahi encrusted with toasted macadamia nuts, pan-seared to golden perfection.',
     recipes: [
       { name: 'Macadamia Crusted Mahi Mahi', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/macadamia-nut-crusted-mahi-mahi/' },
@@ -786,7 +787,7 @@ export const RECIPE_DATA = {
     name: 'Ahi Poke Bowls (Shoyu, Spicy Mayo, Limu)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/poke-bowls.jpg',
     description: 'Fresh ahi tuna cubes in classic shoyu marinade with limu (seaweed), served over rice with toppings.',
     recipes: [
       { name: 'Hawaii-Style Ahi Poke', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/what-is-poke/' },
@@ -804,7 +805,7 @@ export const RECIPE_DATA = {
     name: 'Lomi Lomi Salmon with Tomato & Onion',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/lomi-salmon.jpg',
     description: 'Salted salmon "massaged" (lomi) with diced tomato, sweet onion, and green onions - a refreshing Hawaiian staple.',
     recipes: [
       { name: 'Traditional Lomi Lomi Salmon', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/lomi-lomi-salmon/' },
@@ -821,7 +822,7 @@ export const RECIPE_DATA = {
     name: 'Coconut-Crusted Shrimp with Pineapple Dipping Sauce',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1559742811-822873691df8?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/coconut-shrimp.jpg',
     description: 'Jumbo shrimp coated in panko and sweet coconut, fried golden, served with tangy pineapple dipping sauce.',
     recipes: [
       { name: 'Baked Coconut Shrimp', source: 'Food Network', url: 'https://www.foodnetwork.com/recipes/ina-garten/baked-coconut-shrimp-recipe-1944510' },
@@ -837,7 +838,7 @@ export const RECIPE_DATA = {
     name: 'Char Siu Manapua (Steamed BBQ Pork Buns)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/manapua.jpg',
     description: 'Fluffy steamed buns filled with sweet-savory Chinese BBQ pork (char siu) - a Hawaiian dim sum favorite.',
     recipes: [
       { name: 'Char Siu Bao (Steamed BBQ Pork Buns)', source: 'Woks of Life', url: 'https://thewoksoflife.com/steamed-bbq-pork-buns-char-siu-bao/' },
@@ -854,7 +855,7 @@ export const RECIPE_DATA = {
     name: 'Fresh Poi with Lomi Onions',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1504973960431-1c467e159aa4?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/poi.jpg',
     description: 'Pounded taro root (kalo) fermented to desired sourness, served with lomi onions - the starch of Hawaii.',
     recipes: [
       { name: 'How to Make Poi', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/how-to-make-poi/' },
@@ -870,7 +871,7 @@ export const RECIPE_DATA = {
     name: 'Hawaiian Sweet Bread (Portuguese Style)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/hawaiian-sweet-bread.jpg',
     description: 'Soft, slightly sweet enriched bread - the famous "Portuguese sweet bread" beloved in Hawaii.',
     recipes: [
       { name: 'Portuguese Sweet Bread', source: 'King Arthur Baking', url: 'https://www.kingarthurbaking.com/recipes/portuguese-sweet-bread-recipe' },
@@ -886,7 +887,7 @@ export const RECIPE_DATA = {
     name: 'Steamed White Rice (Calrose)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/rice.jpg',
     description: 'Perfect sticky Calrose rice - the foundation of every Hawaiian plate lunch.',
     recipes: [
       { name: 'Perfect Rice Every Time', source: 'Just One Cookbook', url: 'https://www.justonecookbook.com/how-to-make-rice/' },
@@ -902,7 +903,7 @@ export const RECIPE_DATA = {
     name: 'Hawaiian Mac Salad (Best in the Islands)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1556040220-4096d522378d?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/mac-salad.jpg',
     description: 'Creamy elbow macaroni with mayo, grated carrot, onion, and the secret: letting it absorb overnight.',
     recipes: [
       { name: 'Authentic Hawaiian Macaroni Salad', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/hawaiian-macaroni-salad/' },
@@ -919,7 +920,7 @@ export const RECIPE_DATA = {
     name: 'Baked Taro with Coconut Cream',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1601000938259-9e92002320b2?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/baked-taro.jpg',
     description: 'Taro root baked until creamy, topped with rich coconut cream and a touch of sugar.',
     recipes: [
       { name: 'Kūlolo (Taro and Coconut Dessert)', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/easy-hawaiian-kulolo-recipe/' },
@@ -935,7 +936,7 @@ export const RECIPE_DATA = {
     name: 'Okinawan Purple Sweet Potato Mash',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1596649284995-171b1248be17?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/purple-sweet-potato.jpg',
     description: 'Vibrant purple Okinawan sweet potatoes mashed with butter, coconut milk, and a hint of vanilla.',
     recipes: [
       { name: 'Okinawan Sweet Potato Guide', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/okinawan-sweet-potato/' },
@@ -951,7 +952,7 @@ export const RECIPE_DATA = {
     name: 'Limu & Cucumber Seaweed Salad',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/seaweed-salad.jpg',
     description: 'Refreshing mix of ogo (seaweed), cucumber, sesame oil, rice vinegar, and chili flakes.',
     recipes: [
       { name: 'Hawaiian Seaweed Salad', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/seaweed-salad/' },
@@ -967,7 +968,7 @@ export const RECIPE_DATA = {
     name: 'Baked Pineapple Fried Rice in Pineapple Boat',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/rice.jpg',
     description: 'Fragrant fried rice with pineapple chunks, shrimp, chicken, cashews, curry powder - served in a hollowed pineapple half.',
     recipes: [
       { name: 'Pineapple Fried Rice', source: 'Hot Thai Kitchen', url: 'https://hotthaikitchen.com/pineapple-fried-rice-khao-pad-sapparot/' },
@@ -984,7 +985,7 @@ export const RECIPE_DATA = {
     name: 'Haupia (Coconut Pudding Squares)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1559598467-f8b76c8155d0?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/haupia.jpg',
     description: 'Traditional Hawaiian coconut pudding set with cornstarch/arrowroot - firm, creamy, not too sweet.',
     recipes: [
       { name: 'Authentic Haupia Recipe', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/haupia/' },
@@ -1001,7 +1002,7 @@ export const RECIPE_DATA = {
     name: 'Leonard\'s Style Malasadas (Filled: Haupia, Custard, Lilikoi)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://keepingitrelle.com/wp-content/uploads/2020/02/Malasadas-11-scaled.jpg',
+    imageUrl: '/images/malasadas.jpg',
     description: 'Portuguese-style yeast donuts rolled in sugar, best served warm. Filled with haupia cream, vanilla custard, or lilikoi curd.',
     recipes: [
       { name: 'Easy Hawaiian Style Malasadas', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/easy-hawaiian-style-malasadas-recipe/' },
@@ -1018,7 +1019,7 @@ export const RECIPE_DATA = {
     name: 'Butter Mochi & Mochi Ice Cream Assortment',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/mochi.jpg',
     description: 'Chewy coconut butter mochi bars (baked) + assortment of mochi ice cream (mango, green tea, strawberry, chocolate).',
     recipes: [
       { name: 'Local Sweets: Butter Mochi', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/butter-mochi/' },
@@ -1034,7 +1035,7 @@ export const RECIPE_DATA = {
     name: 'Guava Chiffon Cake',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/guava-chiffon.jpg',
     description: 'Light-as-air chiffon cake infused with guava puree - a Hawaiian bakery classic.',
     recipes: [
       { name: 'Hawaiian Guava Cake', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/guava-cake/' },
@@ -1051,7 +1052,7 @@ export const RECIPE_DATA = {
     name: 'Lilikoi (Passion Fruit) Cheesecake Bars',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/lilikoi-cheesecake.jpg',
     description: 'Creamy cheesecake bars with tangy lilikoi curd swirl on shortbread crust - tropical perfection.',
     recipes: [
       { name: 'Lilikoi Cheesecake', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/lilikoi-cheesecake/' },
@@ -1068,7 +1069,7 @@ export const RECIPE_DATA = {
     name: 'Tropical Fruit Platter (Papaya, Mango, Pineapple, Lychee, Starfruit)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/fruit-platter.jpg',
     description: 'Beautiful arrangement of Hawaii\'s finest tropical fruits - colorful, refreshing, and healthy.',
     recipes: [
       { name: 'Fruit Platter Presentation', source: 'Martha Stewart', url: 'https://www.marthastewart.com/1517522/fruit-platter-ideas' },
@@ -1085,7 +1086,7 @@ export const RECIPE_DATA = {
     name: 'Classic Mai Tai (Orgeat, Orange Curaçao, Lime, Dark Rum)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/mai-tai.jpg',
     description: 'The definitive tiki cocktail - aged rum, fresh lime, orgeat (almond syrup), orange curaçao, shaken not stirred.',
     recipes: [
       { name: 'Classic Mai Tai Recipe', source: 'Liquor.com', url: 'https://www.liquor.com/recipes/mai-tai/' },
@@ -1102,7 +1103,7 @@ export const RECIPE_DATA = {
     name: 'Blue Hawaiʻi (Blue Curaçao, Pineapple, Vodka)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1587223075055-82e9a937ddff?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/blue-hawaii.jpg',
     description: 'Iconic blue tropical cocktail - vodka, blue curaçao, pineapple juice, sweet & sour.',
     recipes: [
       { name: 'Blue Hawaii Cocktail', source: 'Liquor.com', url: 'https://www.liquor.com/recipes/blue-hawaii/' },
@@ -1118,7 +1119,7 @@ export const RECIPE_DATA = {
     name: 'Fresh Piña Colada (Coconut Cream, Pineapple, White Rum)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1597075687490-8f673c6c17f6?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/pina-colada.jpg',
     description: 'The classic frozen cocktail - blended fresh pineapple, coconut cream, white rum, served in hurricane glass.',
     recipes: [
       { name: 'Perfect Piña Colada', source: 'Liquor.com', url: 'https://www.liquor.com/recipes/pina-colada/' },
@@ -1135,7 +1136,7 @@ export const RECIPE_DATA = {
     name: 'Poi Banana Smoothies (Non-Alcoholic)',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1553530979-7ee52a2670c4?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/poi-smoothie.jpg',
     description: 'Unique Hawaiian smoothie - poi + banana + coconut milk + honey, surprisingly delicious and probiotic-rich.',
     recipes: [
       { name: 'Poi Smoothie Recipe', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/poi-smoothie/' },
@@ -1151,7 +1152,7 @@ export const RECIPE_DATA = {
     name: 'Kona Coffee & Hot Tea Station',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/kona-coffee.jpg',
     description: '100% Kona coffee (medium roast) + assortment of hot teas (mamaki, jasmine, chamomile, mint).',
     recipes: [
       { name: 'How to Brew Kona Coffee', source: 'Kona Coffee Council', url: 'https://konacoffeecouncil.com/brew-guide/' },
@@ -1167,7 +1168,7 @@ export const RECIPE_DATA = {
     name: 'Fresh POG & Guava Juice Bar',
     providedBy: '',
     isHostProvided: false,
-    imageUrl: 'https://images.unsplash.com/photo-1622597467836-f38240662be3?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/guava-juice.jpg',
     description: 'Fresh-pressed guava nectar and POG (Passion Orange Guava) - served over ice with sparkling water option.',
     recipes: [
       { name: 'Homemade POG Juice', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/pog-juice/' },

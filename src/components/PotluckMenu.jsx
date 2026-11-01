@@ -356,6 +356,9 @@ const FoodCard = ({ food, category, bringers, isHostProvided, onClick }) => {
             alt={food.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
+            onError={(e) => {
+              e.currentTarget.src = '/images/placeholder-food.jpg';
+            }}
           />
           {isHostProvided && (
             <div className='absolute top-2 right-2 bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold'>HOST PROVIDED</div>
