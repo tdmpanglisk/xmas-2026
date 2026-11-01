@@ -3,9 +3,10 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [react()],
-  base: "/xmas-2026/",  // Keeps asset paths aligned with your repo
+  // Automatically uses root for Vercel deployments, and the subfolder for GitHub Pages
+  base: process.env.VERCEL ? "/" : "/xmas-2026/",  
   build: {
-    outDir: 'docs',     // Tells Vite to output files to 'docs' instead of 'dist'
+    outDir: 'docs',     
     commonjsOptions: {
       exclude: ['canvg']
     },
