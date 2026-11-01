@@ -192,7 +192,7 @@ export const sendCustomInvitation = async (email, customMessage, guestName = nul
       event_date: 'December 25, 2026',
       event_time: '5:00 PM - Midnight',
       event_address: '1183 Hainstock Green SW, Edmonton, AB T6W3B6',
-      host_name: 'The Mah Family (馬家)',
+      host_name: 'Tran, Annie & Lulu',
       // Additional fields that could be used if you add them to the template
       custom_message: customMessage || "You're warmly invited to join us for the Mah Family Hawaiian Christmas Pig Roast.",
       rsvp_deadline: 'December 10, 2026',
