@@ -399,8 +399,15 @@ const normalizeSheetsRow = (row) => {
           name = match[1].trim();
           serves = parseInt(match[2]);
           const rawCategory = match[3].trim();
-          // Map full category name to category ID
-          category = CATEGORY_NAME_TO_ID[rawCategory.toLowerCase()] || 'unknown';
+          // The category stored is already the category ID (e.g., 'appetizers')
+          // Check if it's a valid category ID, otherwise try to map from full name
+          const validCategoryIds = ['appetizers', 'mains', 'sides', 'desserts', 'drinks'];
+          if (validCategoryIds.includes(rawCategory.toLowerCase())) {
+            category = rawCategory.toLowerCase();
+          } else {
+            // Fallback: map full category name to category ID
+            category = CATEGORY_NAME_TO_ID[rawCategory.toLowerCase()] || 'unknown';
+          }
         } else {
           // Fallback for old format without category
           const matchOld = f.match(/(.+)\s*\(serves\s*(\d+)\)/i);
@@ -410,7 +417,18 @@ const normalizeSheetsRow = (row) => {
           }
         }
         
-        return { name, serves, category };
+        // Find the food ID by matching name against FOOD_CATEGORIES
+        let foodId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        // Try to find exact match in FOOD_CATEGORIES
+        for (const cat of FOOD_CATEGORIES) {
+          const found = cat.options.find(opt => opt.name === name);
+          if (found) {
+            foodId = found.id;
+            break;
+          }
+        }
+        
+        return { name, serves, category, id: foodId };
       })
     : [];
   

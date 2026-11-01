@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronUp, ChevronRight, ExternalLink, BookOpen, Sparkles, Users as UsersIcon, Star, RefreshCw } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronRight, ExternalLink, BookOpen, Sparkles, Users as UsersIcon, Star, RefreshCw, Shield, Leaf } from 'lucide-react';
 import { FOOD_CATEGORIES, DIETARY_OPTIONS, RECIPE_DATA } from '../constants';
 import { ChristmasBackground } from './ChristmasBackground';
 import { getAllRSVPs, syncFromGoogleSheets } from '../utils/storage';
@@ -71,14 +71,16 @@ export const PotluckMenu = () => {
     attendingRsvps.forEach(rsvp => {
       console.log('[PotluckMenu] Checking RSVP:', rsvp.name, 'foodSelections:', rsvp.foodSelections.map(f => ({ name: f.name, category: f.category, id: f.id })));
       rsvp.foodSelections.forEach(f => {
+        // Primary match by food ID (most reliable)
         const matchById = food.id && f.id === food.id;
-        const matchByNameAndCat = f.name === food.name && f.category === food.category;
+        // Fallback match by name (in case ID format differs)
+        const matchByName = f.name === food.name;
         
-        if (matchById || matchByNameAndCat) {
+        if (matchById || matchByName) {
           console.log('[PotluckMenu] MATCH:', rsvp.name, 'bringing', food.name);
           bringers.push(rsvp.name);
         } else {
-          console.log('[PotluckMenu] NO MATCH:', f.name, f.category, 'vs', food.name, food.category);
+          console.log('[PotluckMenu] NO MATCH:', f.name, f.category, f.id, 'vs', food.name, food.category, food.id);
         }
       });
     });
@@ -331,37 +333,90 @@ export const PotluckMenu = () => {
 };
 
 const FoodCard = ({ food, category, bringers, isHostProvided, onClick }) => {
+  // Get dietary tags and image for this food from recipe data
+  const recipeData = RECIPE_DATA[food.id];
+  const dietaryTags = recipeData?.dietaryTags || [];
+  const imageUrl = recipeData?.imageUrl;
+  
   return (
-    <div className={`group relative p-4 bg-xmas-night/50 border rounded-xl hover:border-xmas-gold/50 hover:shadow-xl hover:shadow-xmas-gold/10 transition-all cursor-pointer ${isHostProvided ? 'border-xmas-gold/50 bg-xmas-gold/5 ring-2 ring-xmas-gold/20' : 'border-xmas-darkred/30'}`} onClick={onClick}>
+    <div className={`group relative bg-xmas-night/50 border rounded-xl hover:border-xmas-gold/50 hover:shadow-xl hover:shadow-xmas-gold/10 transition-all cursor-pointer ${isHostProvided ? 'border-xmas-gold/50 bg-xmas-gold/5 ring-2 ring-xmas-gold/20' : 'border-xmas-darkred/30'}`} onClick={onClick}>
       {isHostProvided && (
         <div className='absolute top-2 right-2 bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold'>HOST PROVIDED</div>
       )}
-      <div className='flex items-start space-x-3 mb-3'>
-        <div className='w-12 h-12 rounded-lg bg-xmas-red/30 flex items-center justify-center text-2xl flex-shrink-0'>
-          {category === 'Pūpū (Appetizers)' && '🥢'}
-          {category === 'Mea ʻAi Nui (Main Dishes) - The Kalua Pig' && '🐷'}
-          {category === 'Sides & Starches' && '🍚'}
-          {category === 'Mea ʻOno (Desserts)' && '🍰'}
-          {category === 'Inu (Drinks)' && '🍹'}
+      {bringers.length > 0 && (
+        <div className='absolute top-2 left-2 bg-xmas-green text-xmas-night px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1' title={bringers.join(', ')}>
+          <UsersIcon className='w-3 h-3' />
+          <span>{bringers.join(', ')}</span>
         </div>
-        <div className='flex-1 min-w-0'>
-          <h3 className={`font-semibold text-xmas-cream ${isHostProvided ? 'text-xmas-gold' : ''}`}>{food.name}</h3>
-          <p className='text-xs text-xmas-cream/50'>{category}</p>
+      )}
+      {imageUrl && (
+        <div className="relative h-32 md:h-40 rounded-t-lg overflow-hidden">
+          <img 
+            src={imageUrl} 
+            alt={food.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+          {isHostProvided && (
+            <div className='absolute top-2 right-2 bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold'>HOST PROVIDED</div>
+          )}
         </div>
+      )}
+      <div className={`p-4 ${imageUrl ? 'pt-2' : ''}`}>
+        {!imageUrl ? (
+          <div className='flex items-start space-x-3 mb-3'>
+            <div className='w-12 h-12 rounded-lg bg-xmas-red/30 flex items-center justify-center text-2xl flex-shrink-0'>
+              {category === 'Pūpū (Appetizers)' && '🥢'}
+              {category === 'Mea ʻAi Nui (Main Dishes) - The Kalua Pig' && '🐷'}
+              {category === 'Sides & Starches' && '🍚'}
+              {category === 'Mea ʻOno (Desserts)' && '🍰'}
+              {category === 'Inu (Drinks)' && '🍹'}
+            </div>
+            <div className='flex-1 min-w-0'>
+              <h3 className={`font-semibold text-xmas-cream ${isHostProvided ? 'text-xmas-gold' : ''}`}>{food.name}</h3>
+              <p className='text-xs text-xmas-cream/50'>{category}</p>
+              {/* Dietary badges */}
+              {dietaryTags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {dietaryTags.map((tag) => {
+                    const dietaryOption = DIETARY_OPTIONS.find(d => d.id === tag);
+                    return dietaryOption ? (
+                      <span key={tag} className="inline-flex items-center space-x-1 px-2 py-0.5 bg-xmas-green/20 text-xmas-green text-xs rounded-full border border-xmas-green/30" title={dietaryOption.label}>
+                        <span className="text-xs">{dietaryOption.icon}</span>
+                        <span className="font-medium">{dietaryOption.label}</span>
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className='flex-1 min-w-0'>
+            <h3 className={`font-semibold text-xmas-cream ${isHostProvided ? 'text-xmas-gold' : ''}`}>{food.name}</h3>
+            <p className='text-xs text-xmas-cream/50'>{category}</p>
+            {/* Dietary badges */}
+            {dietaryTags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {dietaryTags.map((tag) => {
+                  const dietaryOption = DIETARY_OPTIONS.find(d => d.id === tag);
+                  return dietaryOption ? (
+                    <span key={tag} className="inline-flex items-center space-x-1 px-2 py-0.5 bg-xmas-green/20 text-xmas-green text-xs rounded-full border border-xmas-green/30" title={dietaryOption.label}>
+                      <span className="text-xs">{dietaryOption.icon}</span>
+                      <span className="font-medium">{dietaryOption.label}</span>
+                    </span>
+                  ) : null;
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      <div className='flex items-center justify-between text-sm'>
+      <div className='flex items-center justify-between text-sm px-4 pb-4'>
         <span className='text-xmas-gold font-medium'>
           Serves {food.serves}
         </span>
-        <div className='flex items-center space-x-2'>
-          {bringers.length > 0 && (
-            <span className='bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1'>
-              <UsersIcon className='w-3 h-3' />
-              <span>{bringers.length} bringing</span>
-            </span>
-          )}
-          <span className='text-xmas-cream/50'>Click for details</span>
-        </div>
+        <span className='text-xmas-cream/50'>Click for details</span>
       </div>
     </div>
   );

@@ -108,7 +108,7 @@ export const Hero = () => {
         <div className="relative aspect-[16/9] sm:aspect-[2/1] rounded-3xl overflow-hidden bg-gradient-to-br from-xmas-darkred/30 via-xmas-night to-xmas-darkgreen/30 border-2 border-xmas-gold/40 shadow-2xl shadow-xmas-gold/20">
           <img 
             src={pigRoastImage} 
-            alt="Traditional Hawaiian K\u0101lua Pig Roast with Lei" 
+            alt="Traditional Hawaiian Kālua Pig Roast with Lei" 
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-xmas-night/90 via-xmas-night/40 to-xmas-night/10" />
@@ -144,7 +144,7 @@ export const Hero = () => {
         <div className="text-center">
           {/* Subtitle - compact */}
           <p className="text-sm sm:text-base text-xmas-cream/70 max-w-2xl mx-auto mb-8 font-light leading-relaxed">
-            Join us for a tropical holiday celebration with K\u0101lua Pig, poi, haupia, and aloha spirit. 
+            Join us for a tropical holiday celebration with Kālua Pig, poi, haupia, and aloha spirit. 
             Bring your leis, wear your best aloha shirts, and let&apos;s make memories under the palms!
           </p>
 

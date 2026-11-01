@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Check, X, User, Mail, Phone, Users, Utensils, Heart, AlertCircle, Lock, Key, ChevronDown, ExternalLink, BookOpen, Sparkles, Users as UsersIcon, Star } from 'lucide-react';
-import { ATTENDANCE_OPTIONS, PARTY_SIZE_OPTIONS, FOOD_CATEGORIES, DIETARY_OPTIONS, EVENT_CONFIG, RECIPE_DATA, validateInviteCode } from '../constants';
+import { ChevronLeft, ChevronRight, Check, X, User, Mail, Phone, Users, Utensils, Heart, AlertCircle, ChevronDown, ExternalLink, BookOpen, Sparkles, Users as UsersIcon, Star, Shield, Leaf } from 'lucide-react';
+import { ATTENDANCE_OPTIONS, PARTY_SIZE_OPTIONS, FOOD_CATEGORIES, DIETARY_OPTIONS, EVENT_CONFIG, RECIPE_DATA } from '../constants';
 import { saveRSVP, sendToGoogleSheets, getAllRSVPs, syncFromGoogleSheets } from '../utils/storage';
 import { sendRSVPEmails } from '../utils/emailService';
 import { ChristmasBackground } from './ChristmasBackground';
@@ -11,18 +11,17 @@ export const RSVPForm = () => {
     name: '', 
     email: '', 
     phone: '', 
-    inviteCode: '',
     attendance: 'yes', 
     partySize: 1,
     foodSelections: [], 
     dietaryRestrictions: [], 
     specialRequests: '',
     customFood: '',
+    customFoodCategory: 'sides',
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState(null);
-  const [codeValidated, setCodeValidated] = useState(false);
   const [rsvps, setRsvps] = useState(() => getAllRSVPs());
   const [selectedFoodDetail, setSelectedFoodDetail] = useState(null);
 
@@ -46,14 +45,16 @@ export const RSVPForm = () => {
     attendingRsvps.forEach(rsvp => {
       console.log('[RSVPForm] Checking RSVP:', rsvp.name, 'foodSelections:', rsvp.foodSelections.map(f => ({ name: f.name, category: f.category, id: f.id })));
       rsvp.foodSelections.forEach(f => {
+        // Primary match by food ID (most reliable)
         const matchById = food.id && f.id === food.id;
-        const matchByNameAndCat = f.name === food.name && f.category === food.category;
+        // Fallback match by name (in case ID format differs)
+        const matchByName = f.name === food.name;
         
-        if (matchById || matchByNameAndCat) {
+        if (matchById || matchByName) {
           console.log('[RSVPForm] MATCH:', rsvp.name, 'bringing', food.name);
           bringers.push(rsvp.name);
         } else {
-          console.log('[RSVPForm] NO MATCH:', f.name, f.category, 'vs', food.name, food.category);
+          console.log('[RSVPForm] NO MATCH:', f.name, f.category, f.id, 'vs', food.name, food.category, food.id);
         }
       });
     });
@@ -76,8 +77,6 @@ export const RSVPForm = () => {
       if (!formData.email.trim()) newErrors.email = 'Email is required';
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Invalid email format';
       if (formData.phone && !/^[\d\s\-\+\(\)]{7,}$/.test(formData.phone)) newErrors.phone = 'Invalid phone number';
-      if (!formData.inviteCode.trim()) newErrors.inviteCode = 'Invitation code is required';
-      else if (!validateInviteCode(formData.inviteCode)) newErrors.inviteCode = 'Invalid invitation code';
     }
     if (currentStep === 2) {
       if (formData.attendance === 'yes' && formData.partySize < 1) newErrors.partySize = 'Party size required';
@@ -89,20 +88,6 @@ export const RSVPForm = () => {
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
-  };
-
-  const handleInviteCodeChange = (value) => {
-    const upperValue = value.toUpperCase();
-    setFormData(prev => ({ ...prev, inviteCode: upperValue }));
-    if (errors.inviteCode) setErrors(prev => ({ ...prev, inviteCode: '' }));
-    if (upperValue.length >= 12) {
-      const valid = validateInviteCode(upperValue);
-      if (valid) {
-        setCodeValidated(true);
-      } else {
-        setCodeValidated(false);
-      }
-    }
   };
 
   const toggleFoodSelection = (food) => {
@@ -211,10 +196,23 @@ export const RSVPForm = () => {
             </button>
           </div>
           <div className="p-4 space-y-4">
+            {selectedFoodDetail.recipeData?.imageUrl && (
+              <div className="relative h-48 md:h-64 rounded-lg overflow-hidden">
+                <img 
+                  src={selectedFoodDetail.recipeData.imageUrl} 
+                  alt={selectedFoodDetail.food.name}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                {selectedFoodDetail.hostProvided && (
+                  <div className="absolute top-3 right-3 bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold">HOST PROVIDED</div>
+                )}
+              </div>
+            )}
             <div className="flex items-center space-x-2">
               <span className="text-2xl">{selectedFoodDetail.category === 'Pūpū (Appetizers)' && '🥢'}{selectedFoodDetail.category === 'Mea ʻAi Nui (Main Dishes) - The Kalua Pig' && '🐷'}{selectedFoodDetail.category === 'Sides & Starches' && '🍚'}{selectedFoodDetail.category === 'Mea ʻOno (Desserts)' && '🍰'}{selectedFoodDetail.category === 'Inu (Drinks)' && '🍹'}</span>
               <span className="text-xmas-cream/70">{selectedFoodDetail.category}</span>
-              {selectedFoodDetail.hostProvided && <span className="bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold">HOST PROVIDED</span>}
+              {selectedFoodDetail.hostProvided && !selectedFoodDetail.recipeData?.imageUrl && <span className="bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold">HOST PROVIDED</span>}
             </div>
             <p className="text-xmas-cream">Serves <strong>{selectedFoodDetail.food.serves}</strong> people</p>
             {selectedFoodDetail.recipeData && (
@@ -328,15 +326,6 @@ export const RSVPForm = () => {
                   <input type="tel" id="phone" className={`input-field ${errors.phone ? 'border-red-500 focus:ring-red-500' : ''}`} value={formData.phone} onChange={e=>handleChange('phone',e.target.value)} placeholder="(555) 123-4567" autoComplete="tel" />
                   {errors.phone && <p className="mt-1 text-sm text-red-400">{errors.phone}</p>}
                 </div>
-                <div>
-                  <label htmlFor="inviteCode" className="label"><Key className="w-4 h-4 inline mr-1" /> Invitation Code *</label>
-                  <div className="relative">
-                    <input type="text" id="inviteCode" className={`input-field pr-12 ${errors.inviteCode ? 'border-red-500 focus:ring-red-500' : ''} ${codeValidated ? 'border-xmas-gold focus:ring-xmas-gold' : ''}`} value={formData.inviteCode} onChange={e=>handleInviteCodeChange(e.target.value)} placeholder="Enter your invitation code" required autoComplete="off" style={{ textTransform: 'uppercase' }} />
-                    {codeValidated && <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-xmas-gold" />}
-                  </div>
-                  {errors.inviteCode && <p className="mt-1 text-sm text-red-400">{errors.inviteCode}</p>}
-                  {!errors.inviteCode && formData.inviteCode && <p className="mt-1 text-sm text-xmas-green">Code validated ✓</p>}
-                </div>
               </div>
             )}
             
@@ -394,30 +383,96 @@ export const RSVPForm = () => {
                           const bringers = getFoodBringers(foodWithCategory);
                           const hostProvided = isHostProvided(foodWithCategory);
                           const recipeData = getRecipeData(foodWithCategory);
+                          const isTaken = bringers.length > 0;
+                          const isDisabled = isTaken || hostProvided;
+                          
+                          // Get dietary tags and image for this food from recipe data
+                          const dietaryTags = recipeData?.dietaryTags || [];
+                          const imageUrl = recipeData?.imageUrl;
+                          
                           return (
-                            <div key={food.id} className="relative">
-                              <label className={`cursor-pointer p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-xmas-gold bg-xmas-gold/10' : 'border-xmas-darkred/30 hover:border-xmas-gold/50'}`}>
-                                <input type="checkbox" checked={isSelected} onChange={()=>toggleFoodSelection({...foodWithCategory,category:category.name})} className="sr-only" />
-                                <div className="flex items-start space-x-3">
-                                  {hostProvided && (
-                                    <div className='absolute top-2 right-2 bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold'>HOST PROVIDED</div>
-                                  )}
-                                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-colors ${isSelected ? 'border-xmas-gold bg-xmas-gold text-xmas-night' : 'border-xmas-darkred/50'}`}>{isSelected && <Check className="w-3 h-3" />}</div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-xmas-cream">{foodWithCategory.name}</p>
-                                    <p className="text-xs text-xmas-cream/50">Serves ~{foodWithCategory.serves} people</p>
+                            <div key={food.id} className="relative group">
+                              <label className={`cursor-pointer rounded-lg border-2 transition-all overflow-hidden ${isSelected ? 'border-xmas-gold bg-xmas-gold/10' : isDisabled ? 'border-xmas-darkred/30 bg-xmas-night/50 opacity-60 cursor-not-allowed' : 'border-xmas-darkred/30 hover:border-xmas-gold/50'}`}>
+                                {imageUrl && (
+                                  <div className="relative h-32 md:h-40">
+                                    <img 
+                                      src={imageUrl} 
+                                      alt={foodWithCategory.name}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      loading="lazy"
+                                    />
+                                    {hostProvided && (
+                                      <div className='absolute top-2 right-2 bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold'>HOST PROVIDED</div>
+                                    )}
+                                    {bringers.length > 0 && (
+                                      <div className='absolute top-2 left-2 bg-xmas-green text-xmas-night px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1' title={bringers.join(', ')}>
+                                        <UsersIcon className='w-3 h-3' />
+                                        <span>{bringers.join(', ')}</span>
+                                      </div>
+                                    )}
                                   </div>
+                                )}
+                                <div className={`p-3 ${imageUrl ? 'pt-2' : ''}`}>
+                                  {!imageUrl && (
+                                    <div className="flex items-start space-x-3">
+                                      {hostProvided && (
+                                        <div className='absolute top-2 right-2 bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold'>HOST PROVIDED</div>
+                                      )}
+                                      {bringers.length > 0 && (
+                                        <div className='absolute top-2 left-2 bg-xmas-green text-xmas-night px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1' title={bringers.join(', ')}>
+                                          <UsersIcon className='w-3 h-3' />
+                                          <span>{bringers.join(', ')}</span>
+                                        </div>
+                                      )}
+                                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-colors flex-shrink-0 ${isSelected ? 'border-xmas-gold bg-xmas-gold text-xmas-night' : isDisabled ? 'border-xmas-darkred/30 bg-xmas-night/50' : 'border-xmas-darkred/50'}`}>
+                                        {isSelected && <Check className="w-3 h-3" />}
+                                        {isDisabled && !isSelected && !hostProvided && <UsersIcon className="w-3 h-3 text-xmas-cream/50" />}
+                                        {hostProvided && !isSelected && <Shield className="w-3 h-3 text-xmas-gold" />}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className={`font-medium ${isDisabled ? 'text-xmas-cream/50' : 'text-xmas-cream'}`}>{foodWithCategory.name}</p>
+                                        <p className="text-xs text-xmas-cream/50">Serves ~{foodWithCategory.serves} people</p>
+                                        {/* Dietary badges */}
+                                        {dietaryTags.length > 0 && (
+                                          <div className="flex flex-wrap gap-1 mt-2">
+                                            {dietaryTags.map((tag) => {
+                                              const dietaryOption = DIETARY_OPTIONS.find(d => d.id === tag);
+                                              return dietaryOption ? (
+                                                <span key={tag} className="inline-flex items-center space-x-1 px-2 py-0.5 bg-xmas-green/20 text-xmas-green text-xs rounded-full border border-xmas-green/30" title={dietaryOption.label}>
+                                                  <span className="text-xs">{dietaryOption.icon}</span>
+                                                  <span className="font-medium">{dietaryOption.label}</span>
+                                                </span>
+                                              ) : null;
+                                            })}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </label>
-                              <div className="flex items-center justify-between mt-2 pt-2 border-t border-xmas-darkred/30">
-                                <span className="text-xmas-gold font-medium text-sm">Serves {foodWithCategory.serves}</span>
-                                <div className="flex items-center space-x-2">
-                                  {bringers.length > 0 && (
-                                    <span className="bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1" title={bringers.join(', ')}>
-                                      <UsersIcon className="w-3 h-3" />
-                                      <span>{bringers.length} bringing</span>
-                                    </span>
-                                  )}
+                              {!imageUrl && (
+                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-xmas-darkred/30 px-3">
+                                  <span className="text-xmas-gold font-medium text-sm">Serves {foodWithCategory.serves}</span>
+                                  <div className="flex items-center space-x-2">
+                                    <button 
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setSelectedFoodDetail({ food: foodWithCategory, category: category.name, bringers, hostProvided, recipeData });
+                                      }}
+                                      className="text-xmas-cream/50 hover:text-xmas-gold text-xs flex items-center space-x-1"
+                                    >
+                                      <ChevronDown className="w-3 h-3" />
+                                      <span>Details</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                              {imageUrl && (
+                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-xmas-darkred/30 px-3">
+                                  <span className="text-xmas-gold font-medium text-sm">Serves {foodWithCategory.serves}</span>
                                   <button 
                                     type="button"
                                     onClick={(e) => {
@@ -431,7 +486,7 @@ export const RSVPForm = () => {
                                     <span>Details</span>
                                   </button>
                                 </div>
-                              </div>
+                              )}
                             </div>
                           );
                         })}

@@ -5,6 +5,13 @@
 # 🛑 STRICT FILE & DIRECTORY EXCLUSIONS
 - NEVER attempt to read, write, scan, list, or modify files inside the 'src/data/' directory. It is strictly ignored to prevent context bloating and parsing crashes.
 
+# Project Constraints
+- NEVER read, modify, or analyze files inside the `docs/` directory. 
+- The `docs/` directory contains auto-generated production build assets for GitHub Pages.
+- Always apply code changes and new features inside the `src/` directory.
+- After finishing structural or asset changes in `src/`, remind the user to run `npm run build` to update the production build.
+
+
 # ⚡ CRITICAL WORKFLOW & EDIT LIMITS
 - You are STRICTLY FORBIDDEN from rewriting entire files or multi-component chunks.
 - You MUST use your built-in `replace_in_file` tool for tiny, pinpoint surgical search-and-replace blocks. 

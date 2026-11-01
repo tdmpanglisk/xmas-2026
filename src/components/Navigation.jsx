@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogOut } from 'lucide-react';
+import { AuthContext } from '../App';
 
 /**
  * Navigation bar with mobile menu
@@ -8,6 +9,7 @@ import { Menu, X } from 'lucide-react';
 export const Navigation = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { logout, isAuthenticated } = useContext(AuthContext);
 
   const navLinks = [
     { path: '/', label: 'Home' },
@@ -23,7 +25,7 @@ export const Navigation = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 font-display text-xl text-xmas-gold" aria-label="Christmas 2026 Home">
             <span className="text-2xl">🎄</span>
-            <span className="hidden sm:block">XMAS 2026</span>
+            <span className="hidden sm:block">馬 XMAS 2026</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -41,6 +43,15 @@ export const Navigation = () => {
                 {link.icon ? <span className="text-xl">{link.icon}</span> : link.label}
               </Link>
             ))}
+            {isAuthenticated && (
+              <button
+                onClick={logout}
+                className="text-sm font-medium text-xmas-cream/70 hover:text-xmas-red transition-colors flex items-center space-x-1"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -73,6 +84,15 @@ export const Navigation = () => {
                   {link.icon ? <span className="text-xl">{link.icon}</span> : link.label}
                 </Link>
               ))}
+              {isAuthenticated && (
+                <button
+                  onClick={() => { logout(); setMobileMenuOpen(false); }}
+                  className="text-left px-2 py-2 text-base font-medium text-xmas-cream/70 hover:text-xmas-red transition-colors flex items-center space-x-2"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Logout</span>
+                </button>
+              )}
             </div>
           </div>
         )}
