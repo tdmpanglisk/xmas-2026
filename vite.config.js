@@ -1,11 +1,11 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: "/xmas-2026/",  // Fixes asset paths for GitHub Pages
+  base: "/xmas-2026/",  // Keeps asset paths aligned with your repo
   build: {
+    outDir: 'docs',     // Tells Vite to output files to 'docs' instead of 'dist'
     commonjsOptions: {
       exclude: ['canvg']
     },
