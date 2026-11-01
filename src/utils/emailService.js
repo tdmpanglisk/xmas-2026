@@ -66,6 +66,7 @@ export const sendGuestConfirmation = async (rsvpData) => {
       guest_email: rsvpData.email,
       attendance: rsvpData.attendance === 'yes' ? 'Yes' : rsvpData.attendance === 'maybe' ? 'Maybe' : 'No',
       party_size: rsvpData.partySize,
+      party_names: (rsvpData.partyNames || []).join(', ') || 'None',
       food_items: foodSelections.length > 0
         ? foodSelections.map(f => `${f.name} (serves ${f.serves})`).join(', ')
         : 'Not specified',
@@ -121,6 +122,7 @@ export const sendHostNotification = async (rsvpData) => {
       guest_phone: rsvpData.phone || 'Not provided',
       attendance: rsvpData.attendance === 'yes' ? '✅ Attending' : rsvpData.attendance === 'maybe' ? '🤔 Maybe' : '❌ Not Attending',
       party_size: rsvpData.partySize,
+      party_names: (rsvpData.partyNames || []).join(', ') || 'None',
       total_guests: rsvpData.partySize,
       food_items: foodSelections.length > 0
         ? foodSelections.map(f => `• ${f.name} (serves ${f.serves}) [${f.category}]`).join('\n')
@@ -158,4 +160,56 @@ export const sendRSVPEmails = async (rsvpData) => {
     host: hostResult,
     allSuccess: guestResult.success && hostResult.success,
   };
+};
+
+/**
+ * Send custom invitation email using the dedicated Hawaiian Christmas invitation template
+ * This is used from AdminView to send personalized invitations
+ * Template variables: {{guest_name}}, {{event_date}}, {{event_time}}, {{event_address}}, {{host_name}}
+ */
+export const sendCustomInvitation = async (email, customMessage, guestName = null) => {
+  const configured = isEmailJSConfigured();
+  console.log('[EmailJS] Custom invitation - configured:', configured);
+
+  // Check if invite template is configured
+  const hasInviteTemplate = EMAILJS_CONFIG.inviteTemplateId && 
+                            EMAILJS_CONFIG.inviteTemplateId !== 'template_xxxxxx';
+  
+  if (!configured || !hasInviteTemplate) {
+    console.log('EmailJS not fully configured for invitations - simulating');
+    console.log('Would send invitation to:', email, 'with message:', customMessage);
+    return { success: true, simulated: true };
+  }
+
+  try {
+    // Use provided name or extract from email
+    const name = guestName || email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    
+    // Template variables matching the Hawaiian Christmas invitation HTML
+    const templateParams = {
+      to_email: email,
+      guest_name: name,
+      event_date: 'December 25, 2026',
+      event_time: '5:00 PM - Midnight',
+      event_address: '1183 Hainstock Green SW, Edmonton, AB T6W3B6',
+      host_name: 'The Mah Family (馬家)',
+      // Additional fields that could be used if you add them to the template
+      custom_message: customMessage || "You're warmly invited to join us for the Mah Family Hawaiian Christmas Pig Roast.",
+      rsvp_deadline: 'December 10, 2026',
+      invitation_code: 'MAH-2026-EXCLUSIVE',
+      rsvp_link: typeof window !== 'undefined' ? window.location.origin : 'https://your-site.com',
+      dress_code: 'Aloha Attire Encouraged - Hawaiian Shirts, Muumuus & Leis Welcome!',
+    };
+
+    const response = await emailjs.send(
+      EMAILJS_CONFIG.serviceId,
+      EMAILJS_CONFIG.inviteTemplateId,  // Use the dedicated invitation template
+      templateParams
+    );
+
+    return { success: true, response };
+  } catch (error) {
+    console.error('[EmailJS] Failed to send custom invitation:', error);
+    return { success: false, error };
+  }
 };

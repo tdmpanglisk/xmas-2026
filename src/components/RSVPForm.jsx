@@ -21,9 +21,7 @@ export const RSVPForm = () => {
     name: '',
     email: '',
     phone: '',
-    attendance: 'yes',
-    partySize: 1,
-    foodSelections: [],
+    attendance: 'yes', partySize: 1, partyNames: [], foodSelections: [],
     dietaryRestrictions: [],
     specialRequests: '',
     customFood: '',
@@ -99,6 +97,14 @@ export const RSVPForm = () => {
     });
   };
 
+  const handlePartyName = (index, value) => {
+    setFormData(prev => {
+      const names = [...(prev.partyNames || [])];
+      names[index] = value;
+      return { ...prev, partyNames: names };
+    });
+  };
+
   const toggleDietary = (dietary) => {
     setFormData(prev => {
       const exists = prev.dietaryRestrictions.includes(dietary);
@@ -139,7 +145,11 @@ export const RSVPForm = () => {
       });
     }
 
-    const rsvpData = { ...formData, foodSelections, submittedAt: new Date().toISOString() };
+    // Only keep as many names as there are extra guests; drop blanks
+    const partyNames = formData.attendance === 'no'
+      ? []
+      : Array.from({ length: Math.max(0, formData.partySize - 1) }, (_, i) => ((formData.partyNames || [])[i] || '').trim()).filter(Boolean);
+    const rsvpData = { ...formData, partyNames, foodSelections, submittedAt: new Date().toISOString() };
     const saveResult = saveRSVP(rsvpData);
     if (!saveResult.success) {
       setSubmitResult({ success: false, message: 'Failed to save RSVP. Please try again.' });
@@ -160,8 +170,7 @@ export const RSVPForm = () => {
       setSubmitResult({ success: true, message: 'RSVP submitted successfully!' });
       setFormData({
         name: '', email: '', phone: '',
-        attendance: 'yes', partySize: 1,
-        foodSelections: [], dietaryRestrictions: [],
+        attendance: 'yes', partySize: 1, partyNames: [], foodSelections: [], dietaryRestrictions: [],
         specialRequests: '', customFood: '', customFoodCategory: 'sides',
       });
       setRsvps(getAllRSVPs());
@@ -349,6 +358,24 @@ export const RSVPForm = () => {
                       {PARTY_SIZE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                     </select>
                     {errors.partySize && <p className="mt-1 text-sm text-red-400">{errors.partySize}</p>}
+                    {formData.partySize > 1 && (
+                      <div className="mt-4">
+                        <label className="label">Names of your guests (optional)</label>
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          {Array.from({ length: formData.partySize - 1 }, (_, i) => (
+                            <input
+                              key={i}
+                              type="text"
+                              className="input-field"
+                              placeholder={`Guest ${i + 2} name`}
+                              value={(formData.partyNames || [])[i] || ''}
+                              onChange={e => handlePartyName(i, e.target.value)}
+                              autoComplete="off"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 {formData.attendance === 'no' && (

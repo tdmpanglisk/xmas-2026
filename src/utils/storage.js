@@ -13,6 +13,25 @@ FOOD_CATEGORIES.forEach(cat => {
 const STORAGE_KEY = 'xmas2026_rsvps';
 const ADMIN_SESSION_KEY = 'xmas2026_admin_session';
 
+// Party names live inside the existing "Special Requests" sheet column ("[Party: A, B] message"),
+// so the Google Sheet needs no new columns.
+const PARTY_TAG = /^\[Party:\s*([^\]]*)\]\s*/;
+const cleanPartyName = (n) => String(n).replace(/[\[\],]/g, ' ').replace(/\s+/g, ' ').trim();
+const packSpecialRequests = (r) => {
+  const names = (r.partyNames || []).map(cleanPartyName).filter(Boolean);
+  const msg = r.specialRequests || '';
+  return names.length ? `[Party: ${names.join(', ')}]${msg ? ' ' + msg : ''}` : msg;
+};
+const unpackSpecialRequests = (raw) => {
+  const text = String(raw || '');
+  const m = text.match(PARTY_TAG);
+  if (!m) return { partyNames: [], specialRequests: text };
+  return {
+    partyNames: m[1].split(',').map(s => s.trim()).filter(Boolean),
+    specialRequests: text.slice(m[0].length),
+  };
+};
+
 /**
  * Get all RSVPs from localStorage
  */
@@ -161,7 +180,7 @@ export const exportRSVPsAsCSV = () => {
   if (rsvps.length === 0) return null;
 
   const headers = [
-    'Name', 'Email', 'Phone', 'Attendance', 'Party Size',
+    'Name', 'Email', 'Phone', 'Attendance', 'Party Size', 'Party Names',
     'Food Selections', 'Dietary Restrictions', 'Special Requests',
     'Submitted At', 'Updated At'
   ];
@@ -172,6 +191,7 @@ export const exportRSVPsAsCSV = () => {
     r.phone || '',
     r.attendance === 'yes' ? 'Attending' : r.attendance === 'maybe' ? 'Maybe' : 'Not Attending',
     r.partySize,
+    (r.partyNames || []).join('; '),
     (r.foodSelections || []).map(f => `${f.name} (${f.category})`).join('; '),
     (r.dietaryRestrictions || []).join('; '),
     r.specialRequests || '',
@@ -277,7 +297,7 @@ export const exportRSVPsAsPDF = () => {
       r.partySize.toString(),
       (r.foodSelections || []).map(f => `${f.name} (${f.category})`).join(', ') || 'None',
       (r.dietaryRestrictions || []).join(', ') || 'None',
-      (r.specialRequests || '').substring(0, 80) || 'None',
+      ([(r.partyNames || []).length ? 'Party: ' + r.partyNames.join(', ') : '', r.specialRequests || ''].filter(Boolean).join(' | ')).substring(0, 80) || 'None',
       new Date(r.submittedAt).toLocaleDateString(),
     ];
     
@@ -363,7 +383,7 @@ export const sendToGoogleSheets = async (rsvpData) => {
       headers: { 
         'Content-Type': 'text/plain;charset=utf-8' 
       },
-      body: JSON.stringify(rsvpData),
+      body: JSON.stringify({ ...rsvpData, specialRequests: packSpecialRequests(rsvpData) }),
       signal: controller.signal,
     });
     
@@ -446,7 +466,7 @@ const normalizeSheetsRow = (row) => {
     partySize: parseInt(row['Party Size'] || row['partySize'] || row['PartySize'] || '1'),
     foodSelections,
     dietaryRestrictions,
-    specialRequests: row['Special Requests'] || row['specialRequests'] || row['Special'] || '',
+    ...unpackSpecialRequests(row['Special Requests'] || row['specialRequests'] || row['Special'] || ''),
     submittedAt: timestamp,
     updatedAt: new Date().toISOString(),
   };
