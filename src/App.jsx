@@ -9,7 +9,11 @@ import { useEffect } from 'react';
 
 function App() {
   useEffect(() => {
-    initEmailJS();
+    try {
+      initEmailJS();
+    } catch (error) {
+      console.error("EmailJS initialization failed:", error);
+    }
   }, []);
 
   return (
@@ -26,6 +30,5 @@ function App() {
     </Router>
   );
 }
-
 
 export default App;

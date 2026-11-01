@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: "/xmas-2026/",  // Fixes asset paths for GitHub Pages
   build: {
     commonjsOptions: {
       exclude: ['canvg']
@@ -20,12 +21,4 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['canvg']
   }
-})
-
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  base: "/xmas-2026/",  // Add this line
 })
