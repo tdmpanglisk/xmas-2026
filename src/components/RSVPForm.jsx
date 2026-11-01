@@ -269,26 +269,26 @@ export const RSVPForm = () => {
 
   return (
     <>
-      <section id="rsvp" className="relative min-h-screen pt-16 pb-20">
+      <section id="rsvp" className="relative min-h-screen pt-12 pb-12">
         <ChristmasBackground showSnow={true} showOrnaments={false} />
-        <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="mb-10">
-            <div className="flex items-center justify-center mb-6">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="mb-4">
+            <div className="flex items-center justify-center mb-2">
               {steps.map((s, i) => (
                 <React.Fragment key={s.number}>
                   <div className="flex items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${step >= s.number ? 'bg-xmas-gold text-xmas-night' : 'bg-xmas-darkred/50 text-xmas-cream/50 border border-xmas-darkred'}`}>
-                      {step > s.number ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center font-semibold transition-all ${step >= s.number ? 'bg-xmas-gold text-xmas-night' : 'bg-xmas-darkred/50 text-xmas-cream/50 border border-xmas-darkred'}`}>
+                      {step > s.number ? <Check className="w-4 h-4" /> : <s.icon className="w-4 h-4" />}
                     </div>
-                    {i < steps.length - 1 && <div className={`w-20 h-2 mx-2 transition-colors ${step > i + 1 ? 'bg-xmas-gold' : 'bg-xmas-darkred/30'}`} />}
+                    {i < steps.length - 1 && <div className={`w-12 h-1 mx-2 transition-colors ${step > i + 1 ? 'bg-xmas-gold' : 'bg-xmas-darkred/30'}`} />}
                   </div>
                 </React.Fragment>
               ))}
             </div>
-            <div className="text-center text-xmas-cream/70">Step {step} of 3: {steps[step - 1].title}</div>
+            <div className="text-center text-sm text-xmas-cream/70">Step {step} of 3: {steps[step - 1].title}</div>
           </div>
 
-          <form onSubmit={handleSubmit} className="card space-y-8" noValidate>
+          <form onSubmit={handleSubmit} className="card space-y-5" noValidate>
             {submitResult && (
               <div className={`p-4 rounded-xl ${submitResult.success ? 'bg-green-900/30 border-green-500/50 text-green-300' : 'bg-red-900/30 border-red-500/50 text-red-300'} flex items-start space-x-3`}>
                 <div className="mt-1">{submitResult.success ? <Check className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}</div>
@@ -299,7 +299,7 @@ export const RSVPForm = () => {
             {step === 1 && (
               <div className="space-y-6 animate-fade-in">
                 <div className="text-center mb-4">
-                  <h2 className="section-title">Tell Us About Yourself</h2>
+                  <h2 className="section-title !text-2xl md:!text-3xl">Tell Us About Yourself</h2>
                   <p className="text-xmas-cream/70">We'll use this to send your confirmation and updates</p>
                 </div>
                 <div className="grid md:grid-cols-2 gap-6">
@@ -325,7 +325,7 @@ export const RSVPForm = () => {
             {step === 2 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center mb-4">
-                  <h2 className="section-title">Will You Be Joining Us?</h2>
+                  <h2 className="section-title !text-2xl md:!text-3xl">Will You Be Joining Us?</h2>
                   <p className="text-xmas-cream/70">Let us know if you can make it to the celebration</p>
                 </div>
                 <div className="grid gap-4">
@@ -362,7 +362,7 @@ export const RSVPForm = () => {
             {step === 3 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center mb-4">
-                  <h2 className="section-title">Potluck Sign-Up & Details</h2>
+                  <h2 className="section-title !text-2xl md:!text-3xl">Potluck Sign-Up & Details</h2>
                   <p className="text-xmas-cream/70">Choose what you'd like to bring</p>
                 </div>
 
@@ -383,7 +383,7 @@ export const RSVPForm = () => {
                   {FOOD_CATEGORIES.map((category) => (
                     <div key={category.id} className="card p-4">
                       <h3 className="flex items-center space-x-2 text-xmas-gold mb-4"><span className="text-2xl">{category.icon}</span><span className="font-display text-xl">{category.name}</span></h3>
-                      <div className="grid sm:grid-cols-2 gap-3">
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {category.options.map((food) => {
                           const foodWithCategory = { ...food, category: category.id };
                           const isSelected = formData.foodSelections.some(f => f.id === food.id);
@@ -407,7 +407,7 @@ export const RSVPForm = () => {
                                   onChange={() => toggleFoodSelection(foodWithCategory)}
                                 />
                                 {imageUrl && (
-                                  <div className="relative h-32 md:h-40">
+                                  <div className="relative h-24 md:h-28">
                                     <img
                                       src={imageUrl}
                                       alt={foodWithCategory.name}
