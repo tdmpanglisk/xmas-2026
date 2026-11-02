@@ -131,8 +131,8 @@ export const EMAILJS_CONFIG = {
   serviceId: 'service_9k6hrlt',        // Your EmailJS service ID
   templateId: 'template_8zel339',      // RSVP confirmation template (guest)
   publicKey: 'eE4kGTKd1q0UwpduP',     // Your EmailJS public key
-  hostTemplateId: 'template_jfxdixe',  // Template for host notification
-  inviteTemplateId: 'template_xxxxxx', // TODO: Replace with your Invitation template ID (the Hawaiian Christmas template)
+  //hostTemplateId: 'template_jfxdixe',  // Template for host notification
+  inviteTemplateId: 'template_jfxdixe', // TODO: Replace with your Invitation template ID (the Hawaiian Christmas template)
 };
 
 // Recipe data for potluck items - includes internet recipes, variations, and notes
