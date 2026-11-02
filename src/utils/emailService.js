@@ -16,7 +16,9 @@ export const initEmailJS = () => {
 };
 
 /**
- * Check if EmailJS is properly configured
+ * Check if EmailJS is properly configured for basic email sending
+ * (guest confirmations use templateId, invitations use inviteTemplateId)
+ * Host notifications are optional and use hostTemplateId if available
  */
 const isEmailJSConfigured = () => {
   return EMAILJS_CONFIG.publicKey && 
@@ -24,9 +26,7 @@ const isEmailJSConfigured = () => {
          EMAILJS_CONFIG.serviceId && 
          EMAILJS_CONFIG.serviceId !== 'YOUR_SERVICE_ID' &&
          EMAILJS_CONFIG.templateId && 
-         EMAILJS_CONFIG.templateId !== 'YOUR_TEMPLATE_ID' &&
-         EMAILJS_CONFIG.hostTemplateId && 
-         EMAILJS_CONFIG.hostTemplateId !== 'YOUR_HOST_TEMPLATE_ID';
+         EMAILJS_CONFIG.templateId !== 'YOUR_TEMPLATE_ID';
 };
 
 /**
@@ -91,14 +91,17 @@ export const sendGuestConfirmation = async (rsvpData) => {
 };
 
 /**
- * Send notification email to host
+ * Send notification email to host (optional - requires hostTemplateId)
  */
 export const sendHostNotification = async (rsvpData) => {
   const configured = isEmailJSConfigured();
-  console.log('[EmailJS] Host notification - configured:', configured);
+  const hasHostTemplate = EMAILJS_CONFIG.hostTemplateId && 
+                          EMAILJS_CONFIG.hostTemplateId !== 'YOUR_HOST_TEMPLATE_ID';
   
-  if (!configured) {
-    console.log('EmailJS not configured - simulating host notification email');
+  console.log('[EmailJS] Host notification - configured:', configured, 'hasHostTemplate:', hasHostTemplate);
+  
+  if (!configured || !hasHostTemplate) {
+    console.log('EmailJS not configured for host notifications - simulating');
     console.log('New RSVP:', rsvpData);
     return { success: true, simulated: true };
   }
