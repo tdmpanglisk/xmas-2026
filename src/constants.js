@@ -628,73 +628,52 @@ export const RECIPE_DATA = {
 };*/
 
 
-// Potluck Food Categories & Options - Hawaiian Luau Theme
+// Potluck Food Categories & Options - Guest Sign-up Slots
+// Recipes are optional - guests bring their own dish for the category they select
 export const FOOD_CATEGORIES = [
   {
     id: 'appetizers',
-    name: 'Pūpū (Appetizers)',
-    icon: '🥥',
+    name: 'Appetizer',
+    icon: '🥟',
+    // 2 slots available - guests choose one and bring their own dish
     options: [
-      { id: 'poke-bowls', name: 'Ahi Poke Bowls (Shoyu, Spicy Mayo, Limu)', serves: 12 },
-      { id: 'lomi-salmon', name: 'Lomi Lomi Salmon with Tomato & Onion', serves: 10 },
-      { id: 'coconut-shrimp', name: 'Coconut-Crusted Shrimp with Pineapple Dipping Sauce', serves: 15 },
-      { id: 'manapua', name: 'Char Siu Manapua (Steamed BBQ Pork Buns)', serves: 20 },
-      { id: 'poi', name: 'Fresh Poi with Lomi Onions', serves: 15 },
+      { id: 'appetizer-1', name: 'Appetizer -', serves: 8 },
+      { id: 'appetizer-2', name: 'Appetizer -', serves: 8 },
     ],
   },
   {
-    id: 'mains',
-    name: 'Mea ʻAi Nui (Main Dishes) - The Kalua Pig',
-    icon: '🐷',
+    id: 'hot-veggie',
+    name: 'Hot Veggie',
+    icon: '🥦',
+    // 1 slot available
     options: [
-      { id: 'kalua-pig', name: '🌺 Kālua Pig (Traditional Imu-Roasted with Lei)', serves: 25 },
-      { id: 'huli-huli-chicken', name: 'Huli Huli Chicken (Grilled Pineapple Glaze)', serves: 20 },
-      { id: 'lau-lau', name: 'Lau Lau (Pork & Fish Wrapped in Luau & Ti Leaves)', serves: 15 },
-      { id: 'tofu-lau-lau', name: 'Vegetarian Lau Lau (Tofu, Sweet Potato, Taro Leaf)', serves: 12 },
-      { id: 'grilled-mahi', name: 'Grilled Mahi-Mahi with Macadamia Nut Crust', serves: 15 },
+      { id: 'hot-veggie-1', name: 'Hot Veggie -', serves: 10 },
     ],
   },
   {
-    id: 'sides',
-    name: 'Sides & Starches',
-    icon: '🍠',
+    id: 'starches',
+    name: 'Starch',
+    icon: '🍚',
+    // 2 slots available
     options: [
-      { id: 'hawaiian-sweet-bread', name: 'Hawaiian Sweet Bread (Portuguese Style)', serves: 20 },
-      /*{ id: 'rice', name: 'Steamed White Rice (Calrose)', serves: 30 },*/
-      { id: 'mac-salad', name: 'Hawaiian Mac Salad (Best in the Islands)', serves: 20 },
-      { id: 'baked-taro', name: 'Baked Taro with Coconut Cream', serves: 15 },
-      { id: 'purple-sweet-potato', name: 'Okinawan Purple Sweet Potato Mash', serves: 15 },
-      { id: 'seaweed-salad', name: 'Limu & Cucumber Seaweed Salad', serves: 15 },
-      { id: 'pineapple-rice', name: 'Baked Pineapple Fried Rice in Pineapple Boat', serves: 15 },
+      { id: 'starch-1', name: 'Starch', serves: 12 },
+      { id: 'starch-2', name: 'Starch', serves: 12 },
     ],
   },
   {
     id: 'desserts',
-    name: 'Mea ʻOno (Desserts)',
-    icon: '🍍',
+    name: 'Dessert',
+    icon: '🍰',
+    // 2 slots available
     options: [
-      { id: 'haupia', name: 'Haupia (Coconut Pudding Squares)', serves: 20 },
-      { id: 'malasadas', name: 'Leonard\'s Style Malasadas (Filled: Haupia, Custard, Lilikoi)', serves: 30 },
-      { id: 'mochi', name: 'Butter Mochi & Mochi Ice Cream Assortment', serves: 20 },
-      { id: 'guava-chiffon', name: 'Guava Chiffon Cake', serves: 15 },
-      { id: 'lilikoi-cheesecake', name: 'Lilikoi (Passion Fruit) Cheesecake Bars', serves: 15 },
-      { id: 'fruit-platter', name: 'Tropical Fruit Platter (Papaya, Mango, Pineapple, Lychee, Starfruit)', serves: 25 },
+      { id: 'dessert-1', name: 'Dessert -', serves: 12 },
+      { id: 'dessert-2', name: 'Dessert -', serves: 12 },
     ],
   },
-  {
-    id: 'drinks',
-    name: 'Inu (Drinks)',
-    icon: '🍹',
-    options: [
-      { id: 'mai-tai', name: 'Classic Mai Tai (Orgeat, Orange Curaçao, Lime, Dark Rum)', serves: 20 },
-      { id: 'blue-hawaii', name: 'Blue Hawaiʻi (Blue Curaçao, Pineapple, Vodka)', serves: 20 },
-      { id: 'pina-colada', name: 'Fresh Piña Colada (Coconut Cream, Pineapple, White Rum)', serves: 20 },
-      { id: 'poi-smoothie', name: 'Poi Banana Smoothies (Non-Alcoholic)', serves: 20 },
-      { id: 'kona-coffee', name: 'Kona Coffee & Hot Tea Station', serves: 30 },
-      { id: 'guava-juice', name: 'Fresh Guava & Lilikoi Juice Bar', serves: 25 },
-    ],
-  },
-]; 
+];
+
+// Potluck note for guests
+export const POTLUCK_NOTE = '📝 Recipes are optional - you choose the category and bring your own dish!<br>🚫 No salads allowed, please.'; 
 
 // Recipe data for potluck items - includes internet recipes, variations, verified direct images, and notes
 // Local image paths are applied at build time

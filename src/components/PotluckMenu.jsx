@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, ChevronRight, ExternalLink, BookOpen, Sparkles, Users as UsersIcon, Star, RefreshCw, Shield, Leaf } from 'lucide-react';
-import { FOOD_CATEGORIES, DIETARY_OPTIONS, RECIPE_DATA } from '../constants';
+import { FOOD_CATEGORIES, DIETARY_OPTIONS, RECIPE_DATA, POTLUCK_NOTE } from '../constants';
 import { ChristmasBackground } from './ChristmasBackground';
 import { getAllRSVPs, syncFromGoogleSheets } from '../utils/storage';
 
@@ -134,6 +134,11 @@ export const PotluckMenu = () => {
           <p className='text-xs sm:text-sm text-xmas-cream/60 max-w-2xl mx-auto'>
             Click items for recipes, variations & who's bringing it.
           </p>
+        </div>
+
+        {/* Potluck Note */}
+        <div className='mb-4 p-4 rounded-xl bg-xmas-green/10 border border-xmas-green/30 text-xmas-cream'>
+          <p className='text-sm' dangerouslySetInnerHTML={{ __html: POTLUCK_NOTE }} />
         </div>
 
         <div className='card p-3 mb-4'>

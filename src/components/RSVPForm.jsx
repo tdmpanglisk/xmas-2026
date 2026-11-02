@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Check, X, User, Mail, Phone, Users, Utensils, Heart, AlertCircle, ChevronDown, ExternalLink, Sparkles, Users as UsersIcon, Star, Shield } from 'lucide-react';
-import { ATTENDANCE_OPTIONS, PARTY_SIZE_OPTIONS, FOOD_CATEGORIES, DIETARY_OPTIONS, EVENT_CONFIG, RECIPE_DATA } from '../constants';
+import { ATTENDANCE_OPTIONS, PARTY_SIZE_OPTIONS, FOOD_CATEGORIES, DIETARY_OPTIONS, EVENT_CONFIG, RECIPE_DATA, POTLUCK_NOTE } from '../constants';
 import { saveRSVP, sendToGoogleSheets, getAllRSVPs, syncFromGoogleSheets } from '../utils/storage';
 import { sendRSVPEmails } from '../utils/emailService';
 import { ChristmasBackground } from './ChristmasBackground';
@@ -398,10 +398,17 @@ export const RSVPForm = () => {
                   const have = countDishes(formData);
                   const short = have < needed;
                   return (
-                    <div className={`p-4 rounded-xl border text-sm ${errors.food && short ? 'bg-red-900/30 border-red-500/50 text-red-300' : 'bg-xmas-gold/10 border-xmas-gold/30 text-xmas-cream'}`}>
-                      <strong>Required:</strong> {needed} {needed === 1 ? 'dish' : 'different dishes'} for your party of {formData.partySize}
-                      {' '}(appetizer, main, side, or dessert; drinks don't count). Selected: {have}/{needed}
-                      {errors.food && short && <p className="mt-1">{errors.food}</p>}
+                    <div className="space-y-4">
+                      {/* Potluck Note */}
+                      <div className="p-4 rounded-xl bg-xmas-green/10 border border-xmas-green/30 text-xmas-cream">
+                        <p className="text-sm" dangerouslySetInnerHTML={{ __html: POTLUCK_NOTE }} />
+                      </div>
+                      {/* Required dishes message */}
+                      <div className={`p-4 rounded-xl border text-sm ${errors.food && short ? 'bg-red-900/30 border-red-500/50 text-red-300' : 'bg-xmas-gold/10 border-xmas-gold/30 text-xmas-cream'}`}>
+                        <strong>Required:</strong> {needed} {needed === 1 ? 'dish' : 'different dishes'} for your party of {formData.partySize}
+                        {' '}(appetizer, main, side, or dessert; drinks don't count). Selected: {have}/{needed}
+                        {errors.food && short && <p className="mt-1">{errors.food}</p>}
+                      </div>
                     </div>
                   );
                 })()}
