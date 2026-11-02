@@ -660,7 +660,7 @@ export const FOOD_CATEGORIES = [
     icon: '🍠',
     options: [
       { id: 'hawaiian-sweet-bread', name: 'Hawaiian Sweet Bread (Portuguese Style)', serves: 20 },
-      { id: 'rice', name: 'Steamed White Rice (Calrose)', serves: 30 },
+      /*{ id: 'rice', name: 'Steamed White Rice (Calrose)', serves: 30 },*/
       { id: 'mac-salad', name: 'Hawaiian Mac Salad (Best in the Islands)', serves: 20 },
       { id: 'baked-taro', name: 'Baked Taro with Coconut Cream', serves: 15 },
       { id: 'purple-sweet-potato', name: 'Okinawan Purple Sweet Potato Mash', serves: 15 },
@@ -707,9 +707,8 @@ export const RECIPE_DATA = {
     description: 'The centerpiece of our luau - traditionally cooked in an imu (underground oven) for 12+ hours until fall-apart tender, infused with mesquite smoke and ti leaf essence.',
     recipes: [
       { name: '3-Ingredient Kalua Pork (Oven or Instant Pot)', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/kalua-pork/' },
-      { name: 'Slow Cooker Kalua Pork', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/slow-cooker-kalua-pork/' },
     ],
-    variations: [
+      variations: [
       'Add liquid smoke if no imu available',
       'Wrap in banana leaves + foil for oven version',
       'Use pork shoulder (Boston butt) for best results',
@@ -724,7 +723,6 @@ export const RECIPE_DATA = {
     imageUrl: '/images/huli-huli-chicken.jpg',
     description: 'Classic Hawaiian grilled chicken basted in sweet-savory pineapple-soy glaze, turned ("huli") repeatedly over charcoal.',
     recipes: [
-      { name: 'Authentic Huli Huli Chicken', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/huli-huli-chicken/' },
       { name: 'Shoyu Roast Chicken Alternative', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/shoyu-vinegar-roast-chicken/' },
     ],
     variations: [
@@ -826,7 +824,7 @@ export const RECIPE_DATA = {
     imageUrl: '/images/coconut-shrimp.jpg',
     description: 'Jumbo shrimp coated in panko and sweet coconut, fried golden, served with tangy pineapple dipping sauce.',
     recipes: [
-      { name: 'Baked Coconut Shrimp', source: 'Food Network', url: 'https://www.foodnetwork.com/recipes/ina-garten/baked-coconut-shrimp-recipe-1944510' },
+      { name: 'Baked Coconut Shrimp', source: 'Punchfork', url: 'https://www.punchfork.com/recipe/Whole30-Coconut-Crusted-Shrimp-with-Pineapple-Chili-Sauce-Food-Network' },
     ],
     variations: [
       'Add macadamia nuts to coconut crust',
@@ -884,7 +882,7 @@ export const RECIPE_DATA = {
     ],
     notes: '',
   },
-  'rice': {
+  /*'rice': {
     name: 'Steamed White Rice (Calrose)',
     providedBy: '',
     isHostProvided: false,
@@ -899,7 +897,7 @@ export const RECIPE_DATA = {
       'Add pandan leaf for aroma',
     ],
     notes: 'Calrose or short-grain sticky rice is the local standard for plate lunches.',
-  },
+  },*/
   'mac-salad': {
     name: 'Hawaiian Mac Salad (Best in the Islands)',
     providedBy: '',
@@ -924,7 +922,7 @@ export const RECIPE_DATA = {
     imageUrl: '/images/baked-taro.jpg',
     description: 'Taro root baked until creamy, topped with rich coconut cream and a touch of sugar.',
     recipes: [
-      { name: 'Kūlolo (Taro and Coconut Dessert)', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/easy-hawaiian-kulolo-recipe/' },
+      { name: 'Kūlolo (Taro and Coconut Dessert)', source: 'Eat Bread Fruit', url: 'https://eatbreadfruit.com/blogs/recipes/kalo-taro-with-coconut-cream' },
     ],
     variations: [
       'Steam first, then bake for caramelization',
@@ -940,7 +938,7 @@ export const RECIPE_DATA = {
     imageUrl: '/images/purple-sweet-potato.jpg',
     description: 'Vibrant purple Okinawan sweet potatoes mashed with butter, coconut milk, and a hint of vanilla.',
     recipes: [
-      { name: 'Okinawan Sweet Potato Guide', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/okinawan-sweet-potato/' },
+      { name: 'Mashed Okinawan Sweet Potato', source: 'Cooking on the Weekends', url: 'https://cookingontheweekends.com/mashed-okinawan-sweet-potatoes/' },
     ],
     variations: [
       'Steam don\'t boil - preserves color & nutrients',
@@ -956,7 +954,7 @@ export const RECIPE_DATA = {
     imageUrl: '/images/seaweed-salad.jpg',
     description: 'Refreshing mix of ogo (seaweed), cucumber, sesame oil, rice vinegar, and chili flakes.',
     recipes: [
-      { name: 'Hawaiian Seaweed Salad', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/seaweed-salad/' },
+      { name: 'Hawaiian Seaweed Salad', source: 'Serious Eats', url: 'https://www.seriouseats.com/seaweed-salad-recipe' },
     ],
     variations: [
       'Use fresh ogo if available',
@@ -1006,7 +1004,7 @@ export const RECIPE_DATA = {
     imageUrl: '/images/malasadas.jpg',
     description: 'Portuguese-style yeast donuts rolled in sugar, best served warm. Filled with haupia cream, vanilla custard, or lilikoi curd.',
     recipes: [
-      { name: 'Easy Hawaiian Style Malasadas', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/easy-hawaiian-style-malasadas-recipe/' },
+      { name: 'Indulge in Homemade Portuguese Sweet Bread with this Recipe', source: 'Ono Hawaiian Recipes', url: 'https://onohawaiianrecipes.com/recipes/portuguese-sweet-bread/' },
     ],
     variations: [
       'Fry at 350°F for golden exterior',
@@ -1056,7 +1054,7 @@ export const RECIPE_DATA = {
     imageUrl: '/images/lilikoi-cheesecake.jpg',
     description: 'Creamy cheesecake bars with tangy lilikoi curd swirl on shortbread crust - tropical perfection.',
     recipes: [
-      { name: 'Lilikoi Cheesecake', source: 'Keeping It Relle', url: 'https://keepingitrelle.com/lilikoi-cheesecake/' },
+      { name: 'Lilikoi Cheesecake', source: 'Punchfork', url: 'https://www.punchfork.com/recipe/Lilikoi-Cheesecake-Tart-with-Lilikoi-Glaze-The-Little-Ferraro-Kitchen' },
     ],
     variations: [
       'Use fresh lilikoi pulp (seeds and all)',
@@ -1073,7 +1071,7 @@ export const RECIPE_DATA = {
     imageUrl: '/images/fruit-platter.jpg',
     description: 'Beautiful arrangement of Hawaii\'s finest tropical fruits - colorful, refreshing, and healthy.',
     recipes: [
-      { name: 'Fruit Platter Presentation', source: 'Martha Stewart', url: 'https://www.marthastewart.com/1517522/fruit-platter-ideas' },
+      { name: 'Fruit Platter Presentation', source: 'Yummy Mmummy Kitchen', url: 'https://www.yummymummykitchen.com/2016/06/tropical-fruit.html' },
     ],
     variations: [
       'Include: papaya, mango, pineapple, lychee, starfruit, dragon fruit, rambutan',
@@ -1140,7 +1138,7 @@ export const RECIPE_DATA = {
     imageUrl: '/images/poi-smoothie.jpg',
     description: 'Unique Hawaiian smoothie - poi + banana + coconut milk + honey, surprisingly delicious and probiotic-rich.',
     recipes: [
-      { name: 'Poi Smoothie Recipe', source: 'Onolicious Hawaiʻi', url: 'https://onolicioushawaii.com/poi-smoothie/' },
+      { name: 'Poi Smoothie Recipe', source: 'Hawaiʻi Nutritional Center', url: 'https://nutritioncenter.ctahr.hawaii.edu/poi-fruit-smoothie/' },
     ],
     variations: [
       'Add mango or pineapple',
