@@ -79,7 +79,7 @@ export const Hero = () => {
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const eventDate = new Date("December 20, 2026 17:00:00").getTime();
+      const eventDate = new Date("December 25, 2026 17:00:00").getTime();
       const now = new Date().getTime();
       const difference = eventDate - now;
       if (difference > 0) {
@@ -111,20 +111,22 @@ export const Hero = () => {
             alt="Traditional Hawaiian Kālua Pig Roast with Lei" 
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-xmas-night/90 via-xmas-night/40 to-xmas-night/10" />
-          <div className="absolute inset-0 flex items-end justify-center p-8 sm:p-12">
+          <div className="absolute inset-0 bg-gradient-to-t from-xmas-night/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 flex items-end justify-center p-3 pb-5 sm:p-4 sm:pb-6">
             <div className="text-center max-w-4xl mx-auto">
-              <div className="flex items-center justify-center space-x-3 mb-4">
+              <div className="flex items-center justify-center space-x-3 mb-1">
                 <div className="w-12 h-px bg-gradient-to-r from-transparent via-xmas-gold to-transparent" />
-                <span className="text-2xl sm:text-3xl animate-pulse-slow">🐷</span>
+                <span className="text-base sm:text-lg animate-pulse-slow">🐷</span>
                 <div className="w-12 h-px bg-gradient-to-r from-transparent via-xmas-gold to-transparent" />
               </div>
-              <h1 className="font-display text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-xmas-cream mb-2 leading-tight text-balance">
-                Mah Family Hawaiian Christmas 2026
-                <br />
+              <h1 className="font-display text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-xmas-cream mb-1.5 leading-tight text-balance drop-shadow-lg">
                 <span className="text-xmas-gold">馬家 聖誕快樂</span>
+                <br />
+                Mah Family Hawaiian Christmas 2026
+                
+                
               </h1>
-              <div className="inline-flex items-center space-x-2 bg-xmas-gold/20 border border-xmas-gold/40 px-3 py-1.5 rounded-full text-xmas-gold font-semibold text-xs sm:text-sm">
+              <div className="inline-flex items-center space-x-2 bg-xmas-gold/20 border border-xmas-gold/40 px-2.5 py-0.5 rounded-full text-xmas-gold font-semibold text-[10px] sm:text-xs">
                 <span>✨</span>
                 <span>Hosted at Annie, Tran and Lulu's</span>
                 <span>✨</span>
@@ -196,7 +198,7 @@ export const Hero = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto">
             <EventDetailItem icon={<Calendar className="w-5 h-5" />} label="Date" value={EVENT_CONFIG.date} />
             <EventDetailItem icon={<Clock className="w-5 h-5" />} label="Time" value={EVENT_CONFIG.time} />
-            <EventDetailItem icon={<MapPin className="w-5 h-5" />} label="Location" value="Honolulu, Hawai&apos;i" />
+            <EventDetailItem icon={<MapPin className="w-5 h-5" />} label="Location" value="1183 Hainstock Green SW, Edmonton, AB" />
             <EventDetailItem icon={<Users className="w-5 h-5" />} label="Guests" value={"Up to " + EVENT_CONFIG.maxGuests} />
           </div>
         </div>

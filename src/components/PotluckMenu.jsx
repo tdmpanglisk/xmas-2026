@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, ChevronRight, ExternalLink, BookOpen, Sparkles, Users as UsersIcon, Star, RefreshCw, Shield, Leaf } from 'lucide-react';
-import { FOOD_CATEGORIES, DIETARY_OPTIONS, RECIPE_DATA, POTLUCK_NOTE } from '../constants';
+import { FOOD_CATEGORIES, DIETARY_OPTIONS, RECIPE_DATA, POTLUCK_NOTE, HAWAIIAN_TIP } from '../constants';
 import { ChristmasBackground } from './ChristmasBackground';
+import { SuggestionChip } from './SuggestionChip';
 import { getAllRSVPs, syncFromGoogleSheets } from '../utils/storage';
 
 export const PotluckMenu = () => {
@@ -14,6 +15,7 @@ export const PotluckMenu = () => {
   const [rsvps, setRsvps] = useState(() => getAllRSVPs());
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState(null);
+  const [showRecipeIdeas, setShowRecipeIdeas] = useState(null); // category id
 
   // Initial load from localStorage and sync from Sheets
   useEffect(() => {
@@ -58,29 +60,11 @@ export const PotluckMenu = () => {
 
   const getFoodBringers = (food) => {
     const bringers = [];
-    const attendingRsvps = rsvps.filter(r => r.attendance === 'yes');
-    
-    // Debug: log the food we're looking for
-    console.log('[PotluckMenu] Looking for bringers for:', { 
-      foodName: food.name, 
-      foodCategory: food.category, 
-      foodId: food.id,
-      attendingCount: attendingRsvps.length 
-    });
-    
-    attendingRsvps.forEach(rsvp => {
-      console.log('[PotluckMenu] Checking RSVP:', rsvp.name, 'foodSelections:', rsvp.foodSelections.map(f => ({ name: f.name, category: f.category, id: f.id })));
-      rsvp.foodSelections.forEach(f => {
-        // Primary match by food ID (most reliable)
-        const matchById = food.id && f.id === food.id;
-        // Fallback match by name (in case ID format differs)
-        const matchByName = f.name === food.name;
-        
-        if (matchById || matchByName) {
-          console.log('[PotluckMenu] MATCH:', rsvp.name, 'bringing', food.name);
-          bringers.push(rsvp.name);
-        } else {
-          console.log('[PotluckMenu] NO MATCH:', f.name, f.category, f.id, 'vs', food.name, food.category, food.id);
+    rsvps.filter(r => r.attendance === 'yes').forEach(rsvp => {
+      (rsvp.foodSelections || []).forEach(f => {
+        // Primary match by food ID, fallback by name
+        if ((food.id && f.id === food.id) || f.name === food.name) {
+          bringers.push({ name: rsvp.name, dishName: f.dishName || '' });
         }
       });
     });
@@ -101,7 +85,7 @@ export const PotluckMenu = () => {
   // Build categories including custom foods from RSVPs
   const customFoodsByCategory = {};
   rsvps.filter(r => r.attendance === 'yes').forEach(rsvp => {
-    rsvp.foodSelections.forEach(f => {
+    (rsvp.foodSelections || []).forEach(f => {
       if (f.isCustom) {
         if (!customFoodsByCategory[f.category]) {
           customFoodsByCategory[f.category] = [];
@@ -181,7 +165,7 @@ export const PotluckMenu = () => {
                 onClick={() => toggleCategory(catIndex)}
                 className='w-full p-4 flex items-center justify-between bg-xmas-darkred/20 hover:bg-xmas-darkred/30 transition-colors'
               >
-                <div className='flex items-center space-x-3'>
+                <div className='flex items-center space-x-3 flex-1 min-w-0'>
                   <span className='text-3xl'>{category.icon}</span>
                   <div>
                     <h2 className='font-display text-xl text-xmas-gold'>{category.name}</h2>
@@ -190,15 +174,31 @@ export const PotluckMenu = () => {
                     </p>
                   </div>
                 </div>
-                {expandedCategories[catIndex] ? (
-                  <ChevronUp className='w-6 h-6 text-xmas-gold transition-transform' />
-                ) : (
-                  <ChevronDown className='w-6 h-6 text-xmas-gold transition-transform' />
-                )}
+                <div className='flex items-center space-x-2'>
+                  
+                  {expandedCategories[catIndex] ? (
+                    <ChevronUp className='w-6 h-6 text-xmas-gold transition-transform' />
+                  ) : (
+                    <ChevronDown className='w-6 h-6 text-xmas-gold transition-transform' />
+                  )}
+                </div>
               </button>
 
               {expandedCategories[catIndex] && (
-                <div className='p-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
+                <div className='p-4 space-y-4'>
+                  {/* Recipe Ideas Dropdown */}
+                  {category.recipeSuggestions && (
+                    <div className='p-3 bg-xmas-night/50 border border-xmas-gold/20 rounded-lg animate-fade-in'>
+                      <p className='text-xs text-xmas-cream/60 mb-2'>Recipe ideas - tap a link to open the recipe in a new tab:</p>
+                      <div className='flex flex-wrap gap-2'>
+                        {category.recipeSuggestions.map((suggestion, idx) => (
+                          <SuggestionChip key={idx} suggestion={suggestion} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <p className='text-xs text-xmas-gold/80'>💡 Tip: {HAWAIIAN_TIP}</p>
+                  <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
                   {category.options.map((food) => {
                     // Debug: log food properties for first few items
                     if (food.name.includes('Kalua') || food.name.includes('Lomi') || food.name.includes('Rice')) {
@@ -216,6 +216,7 @@ export const PotluckMenu = () => {
                     />
                     );
                   })}
+                  </div>
                 </div>
               )}
             </div>
@@ -238,7 +239,7 @@ export const PotluckMenu = () => {
               <div className='flex items-start justify-between mb-6'>
                 <div>
                   <div className='flex items-center space-x-2 text-xmas-gold mb-2'>
-                    <span className='text-2xl'>{selectedFood.category === 'Pūpū (Appetizers)' && '🥢'}{selectedFood.category === 'Mea ʻAi Nui (Main Dishes) - The Kalua Pig' && '🐷'}{selectedFood.category === 'Sides & Starches' && '🍚'}{selectedFood.category === 'Mea ʻOno (Desserts)' && '🍰'}{selectedFood.category === 'Inu (Drinks)' && '🍹'}</span>
+                    <span className='text-2xl'>{FOOD_CATEGORIES.find(c => c.name === selectedFood.category)?.icon}</span>
                     <span className='font-display text-xl'>{selectedFood.category}</span>
                     {selectedFood.isHostProvided && <span className='bg-xmas-gold text-xmas-night px-3 py-1 rounded-full text-sm font-bold'>✨ Host Provided</span>}
                   </div>
@@ -297,6 +298,22 @@ export const PotluckMenu = () => {
                 )}
               </div>
 
+              {(() => {
+                const cat = FOOD_CATEGORIES.find(c => c.name === selectedFood.category);
+                const ideas = cat?.recipeSuggestions || [];
+                return ideas.length > 0 && !(selectedFood.recipeData?.recipes?.length > 0) ? (
+                  <div className='mb-6 bg-xmas-night/50 border border-xmas-darkred/30 rounded-xl p-4'>
+                    <h3 className='flex items-center space-x-2 text-xmas-gold mb-3'>
+                      <BookOpen className='w-5 h-5' />
+                      <span className='font-display text-lg'>Recipe ideas</span>
+                    </h3>
+                    <div className='flex flex-wrap gap-2'>
+                      {ideas.map((s, i) => <SuggestionChip key={i} suggestion={s} />)}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+
               {/* Notes & Bringers */}
               <div className='space-y-4'>
                 {selectedFood.recipeData?.notes && (
@@ -316,8 +333,10 @@ export const PotluckMenu = () => {
                       <span className='font-display text-lg'>Bringing this dish</span>
                     </h3>
                     <div className='flex flex-wrap gap-2'>
-                      {selectedFood.bringers.map((name, i) => (
-                        <span key={i} className='px-3 py-1 bg-xmas-green/20 text-xmas-green rounded-full text-sm font-medium'>{name}</span>
+                      {selectedFood.bringers.map((bringer, i) => (
+                        <span key={i} className='px-3 py-1 bg-xmas-green/20 text-xmas-green rounded-full text-sm font-medium'>
+                          {bringer.name}{bringer.dishName && <span className='text-xmas-cream/70 ml-1'>{' - ' + bringer.dishName}</span>}
+                        </span>
                       ))}
                     </div>
                   </div>
@@ -349,9 +368,9 @@ const FoodCard = ({ food, category, bringers, isHostProvided, onClick }) => {
         <div className='absolute top-2 right-2 bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold'>HOST PROVIDED</div>
       )}
       {bringers.length > 0 && (
-        <div className='absolute top-2 left-2 bg-xmas-green text-xmas-night px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1' title={bringers.join(', ')}>
+        <div className='absolute top-2 left-2 bg-xmas-green text-xmas-night px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1' title={bringers.map(b => b.name + (b.dishName ? ': ' + b.dishName : '')).join('; ')}>
           <UsersIcon className='w-3 h-3' />
-          <span>{bringers.join(', ')}</span>
+          <span>{bringers.map(b => b.name).join(', ')}</span>
         </div>
       )}
       {imageUrl && (
@@ -374,11 +393,7 @@ const FoodCard = ({ food, category, bringers, isHostProvided, onClick }) => {
         {!imageUrl ? (
           <div className='flex items-start space-x-3 mb-3'>
             <div className='w-12 h-12 rounded-lg bg-xmas-red/30 flex items-center justify-center text-2xl flex-shrink-0'>
-              {category === 'Pūpū (Appetizers)' && '🥢'}
-              {category === 'Mea ʻAi Nui (Main Dishes) - The Kalua Pig' && '🐷'}
-              {category === 'Sides & Starches' && '🍚'}
-              {category === 'Mea ʻOno (Desserts)' && '🍰'}
-              {category === 'Inu (Drinks)' && '🍹'}
+              {FOOD_CATEGORIES.find(c => c.name === category)?.icon}
             </div>
             <div className='flex-1 min-w-0'>
               <h3 className={`font-semibold text-xmas-cream ${isHostProvided ? 'text-xmas-gold' : ''}`}>{food.name}</h3>
@@ -420,6 +435,24 @@ const FoodCard = ({ food, category, bringers, isHostProvided, onClick }) => {
           </div>
         )}
       </div>
+      {recipeData?.recipes?.length > 0 && (
+        <div className='px-4 pb-2 flex flex-wrap gap-x-3 gap-y-1' onClick={e => e.stopPropagation()}>
+          {recipeData.recipes.slice(0, 2).map((r, i) => (
+            <a key={i} href={r.url} target='_blank' rel='noopener noreferrer' className='inline-flex items-center space-x-1 text-xs text-xmas-cream/70 hover:text-xmas-gold hover:underline'>
+              <ExternalLink className='w-3 h-3' /><span>{r.name}</span>
+            </a>
+          ))}
+        </div>
+      )}
+      {bringers.length > 0 && (
+        <div className='px-4 pb-2 space-y-0.5'>
+          {bringers.map((b, i) => (
+            <p key={i} className='text-xs text-xmas-green break-words'>
+              {b.dishName ? <strong>{b.dishName}</strong> : 'Signed up'} <span className='text-xmas-cream/60'>by {b.name}</span>
+            </p>
+          ))}
+        </div>
+      )}
       <div className='flex items-center justify-between text-sm px-4 pb-4'>
         <span className='text-xmas-gold font-medium'>
           Serves {food.serves}

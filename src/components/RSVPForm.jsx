@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Check, X, User, Mail, Phone, Users, Utensils, Heart, AlertCircle, ChevronDown, ExternalLink, Sparkles, Users as UsersIcon, Star, Shield } from 'lucide-react';
-import { ATTENDANCE_OPTIONS, PARTY_SIZE_OPTIONS, FOOD_CATEGORIES, DIETARY_OPTIONS, EVENT_CONFIG, RECIPE_DATA, POTLUCK_NOTE } from '../constants';
+import { ChevronLeft, ChevronRight, Check, X, User, Mail, Phone, Users, Utensils, Heart, AlertCircle, ChevronDown, ExternalLink, Sparkles, Users as UsersIcon, Star, Shield, Plus, BookOpen } from 'lucide-react';
+import { ATTENDANCE_OPTIONS, PARTY_SIZE_OPTIONS, FOOD_CATEGORIES, DIETARY_OPTIONS, EVENT_CONFIG, RECIPE_DATA, POTLUCK_NOTE, HAWAIIAN_TIP } from '../constants';
 import { saveRSVP, sendToGoogleSheets, getAllRSVPs, syncFromGoogleSheets } from '../utils/storage';
 import { sendRSVPEmails } from '../utils/emailService';
 import { ChristmasBackground } from './ChristmasBackground';
+import { SuggestionChip } from './SuggestionChip';
 
 // 1 dish for parties of 1-3, 2 different dishes for parties of 4+
 const requiredDishes = (partySize) => (partySize >= 4 ? 2 : 1);
@@ -32,6 +33,7 @@ export const RSVPForm = () => {
   const [submitResult, setSubmitResult] = useState(null);
   const [rsvps, setRsvps] = useState(() => getAllRSVPs());
   const [selectedFoodDetail, setSelectedFoodDetail] = useState(null);
+  const [showRecipeIdeas, setShowRecipeIdeas] = useState(null); // category id
 
   // Load RSVPs on mount and sync
   useEffect(() => {
@@ -40,18 +42,36 @@ export const RSVPForm = () => {
   }, []);
 
   const getFoodBringers = (food) => {
+    const me = (formData.email || '').trim().toLowerCase();
     const bringers = [];
-    const attendingRsvps = rsvps.filter(r => r.attendance === 'yes');
-
-    attendingRsvps.forEach(rsvp => {
-      rsvp.foodSelections.forEach(f => {
+    rsvps.filter(r => r.attendance === 'yes').forEach(rsvp => {
+      // Your own earlier RSVP (same email) shouldn't lock you out of your dishes when editing
+      if (me && (rsvp.email || '').toLowerCase() === me) return;
+      (rsvp.foodSelections || []).forEach(f => {
         // Primary match by food ID, fallback by name
-        const matchById = food.id && f.id === food.id;
-        const matchByName = f.name === food.name;
-        if (matchById || matchByName) bringers.push(rsvp.name);
+        if ((food.id && f.id === food.id) || f.name === food.name) {
+          bringers.push({ name: rsvp.name, dishName: f.dishName || '' });
+        }
       });
     });
     return bringers;
+  };
+
+  // Custom dishes other guests added, so they show in step 3 like they do on the menu
+  const getCustomFoods = (categoryId) => {
+    const me = (formData.email || '').trim().toLowerCase();
+    const seen = new Set();
+    const out = [];
+    rsvps.filter(r => r.attendance === 'yes').forEach(rsvp => {
+      if (me && (rsvp.email || '').toLowerCase() === me) return;
+      (rsvp.foodSelections || []).forEach(f => {
+        if (f.isCustom && f.category === categoryId && !seen.has(f.name)) {
+          seen.add(f.name);
+          out.push({ id: f.id, name: f.name, serves: f.serves || 1, isCustom: true });
+        }
+      });
+    });
+    return out;
   };
 
   const isHostProvided = (food) => {
@@ -71,14 +91,22 @@ export const RSVPForm = () => {
     }
     if (currentStep === 2) {
       if (formData.attendance === 'yes' && formData.partySize < 1) newErrors.partySize = 'Party size required';
+      if (formData.attendance !== 'no' && formData.partySize > 1) {
+        const missing = Array.from({ length: formData.partySize - 1 }, (_, i) => i).some(i => !((formData.partyNames || [])[i] || '').trim());
+        if (missing) newErrors.partyNames = 'Please enter a name for every guest in your party.';
+      }
     }
     if (currentStep === 3 && formData.attendance === 'yes') {
       const needed = requiredDishes(formData.partySize);
       if (countDishes(formData) < needed) {
         newErrors.food = needed === 2
-          ? 'Parties of 4 or more: please sign up for 2 different dishes (appetizer, main, side, or dessert).'
-          : 'Please sign up for 1 dish (appetizer, main, side, or dessert).';
+          ? 'Parties of 4 or more: please sign up for 2 different dishes (appetizer, hot veggie, starch, or dessert).'
+          : 'Please sign up for 1 dish (appetizer, hot veggie, starch, or dessert).';
       }
+    }
+    if (currentStep === 3 && formData.attendance === 'yes' && !newErrors.food) {
+      const unnamed = formData.foodSelections.find(f => !(f.dishName || '').trim());
+      if (unnamed) newErrors.dishName = `Please add your dish name for "${unnamed.name}".`;
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -93,11 +121,29 @@ export const RSVPForm = () => {
     setFormData(prev => {
       const exists = prev.foodSelections.find(f => f.id === food.id);
       if (exists) return { ...prev, foodSelections: prev.foodSelections.filter(f => f.id !== food.id) };
-      return { ...prev, foodSelections: [...prev.foodSelections, food] };
+      // Add new selection with empty dishName - user will fill it in
+      return { ...prev, foodSelections: [...prev.foodSelections, { ...food, dishName: '' }] };
     });
   };
 
+  const addFoodWithDish = (food, dishName) => {
+    setFormData(prev => prev.foodSelections.some(f => f.id === food.id)
+      ? prev
+      : { ...prev, foodSelections: [...prev.foodSelections, { ...food, dishName }] });
+  };
+
+  const updateDishName = (foodId, dishName) => {
+    setErrors(prev => ({ ...prev, dishName: '' }));
+    setFormData(prev => ({
+      ...prev,
+      foodSelections: prev.foodSelections.map(f =>
+        f.id === foodId ? { ...f, dishName } : f
+      )
+    }));
+  };
+
   const handlePartyName = (index, value) => {
+    setErrors(prev => ({ ...prev, partyNames: '' }));
     setFormData(prev => {
       const names = [...(prev.partyNames || [])];
       names[index] = value;
@@ -167,14 +213,14 @@ export const RSVPForm = () => {
 
     const emailResult = await sendRSVPEmails(rsvpData);
     if (emailResult.allSuccess || emailResult.guest.simulated) {
-      setSubmitResult({ success: true, message: 'RSVP submitted successfully!' });
-      setFormData({
-        name: '', email: '', phone: '',
-        attendance: 'yes', partySize: 1, partyNames: [], foodSelections: [], dietaryRestrictions: [],
-        specialRequests: '', customFood: '', customFoodCategory: 'sides',
+      setSubmitResult({ 
+        success: true, 
+        message: 'RSVP submitted successfully!',
+        data: rsvpData // Store submitted data for display
       });
       setRsvps(getAllRSVPs());
-      setStep(1);
+      // Don't reset form or step - show success with submitted data
+      // User can click "Submit Another RSVP" if needed
     } else {
       setSubmitResult({ success: false, message: 'RSVP saved but email notification failed. We\'ll still receive your response!' });
     }
@@ -213,7 +259,7 @@ export const RSVPForm = () => {
             </div>
           )}
           <div className="flex items-center space-x-2">
-            <span className="text-2xl">{selectedFoodDetail.category === 'Pūpū (Appetizers)' && '🥢'}{selectedFoodDetail.category === 'Mea ʻAi Nui (Main Dishes) - The Kalua Pig' && '🐷'}{selectedFoodDetail.category === 'Sides & Starches' && '🍚'}{selectedFoodDetail.category === 'Mea ʻOno (Desserts)' && '🍰'}{selectedFoodDetail.category === 'Inu (Drinks)' && '🍹'}</span>
+            <span className="text-2xl">{FOOD_CATEGORIES.find(c => c.name === selectedFoodDetail.category)?.icon}</span>
             <span className="text-xmas-cream/70">{selectedFoodDetail.category}</span>
             {selectedFoodDetail.hostProvided && !selectedFoodDetail.recipeData?.imageUrl && <span className="bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold">HOST PROVIDED</span>}
           </div>
@@ -256,12 +302,25 @@ export const RSVPForm = () => {
               )}
             </>
           )}
+          {(() => {
+            const cat = FOOD_CATEGORIES.find(c => c.name === selectedFoodDetail.category);
+            const ideas = cat?.recipeSuggestions || [];
+            return ideas.length > 0 && !(selectedFoodDetail.recipeData?.recipes?.length > 0) ? (
+              <div className="bg-xmas-gold/5 border border-xmas-gold/20 rounded-lg p-4">
+                <h3 className="flex items-center space-x-2 text-xmas-gold mb-2"><BookOpen className="w-5 h-5" /><span className="font-display text-lg">Recipe ideas</span></h3>
+                <p className="text-xs text-xmas-cream/70 mb-2">{HAWAIIAN_TIP}</p>
+                <div className="flex flex-wrap gap-2">
+                  {ideas.map((s, i) => <SuggestionChip key={i} suggestion={s} />)}
+                </div>
+              </div>
+            ) : null;
+          })()}
           {selectedFoodDetail.bringers.length > 0 && (
             <div className="bg-xmas-green/10 border border-xmas-green/30 rounded-xl p-4">
               <h3 className="flex items-center space-x-2 text-xmas-green mb-2"><UsersIcon className="w-5 h-5" /><span className="font-display text-lg">Bringing this dish</span></h3>
               <div className="flex flex-wrap gap-2">
-                {selectedFoodDetail.bringers.map((name, i) => (
-                  <span key={i} className="px-3 py-1 bg-xmas-green/20 text-xmas-green rounded-full text-sm font-medium">{name}</span>
+                {selectedFoodDetail.bringers.map((b, i) => (
+                  <span key={i} className="px-3 py-1 bg-xmas-green/20 text-xmas-green rounded-full text-sm font-medium">{b.dishName ? <>{b.dishName} <span className="text-xmas-cream/70">- {b.name}</span></> : b.name}</span>
                 ))}
               </div>
             </div>
@@ -299,9 +358,53 @@ export const RSVPForm = () => {
 
           <form onSubmit={handleSubmit} className="card space-y-5" noValidate>
             {submitResult && (
-              <div className={`p-4 rounded-xl ${submitResult.success ? 'bg-green-900/30 border-green-500/50 text-green-300' : 'bg-red-900/30 border-red-500/50 text-red-300'} flex items-start space-x-3`}>
-                <div className="mt-1">{submitResult.success ? <Check className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}</div>
-                <p>{submitResult.message}</p>
+              <div className={`p-4 rounded-xl ${submitResult.success ? 'bg-green-900/30 border-green-500/50 text-green-300' : 'bg-red-900/30 border-red-500/50 text-red-300'} flex flex-col space-y-3`}>
+                <div className="flex items-start space-x-3">
+                  <div className="mt-1">{submitResult.success ? <Check className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}</div>
+                  <p>{submitResult.message}</p>
+                </div>
+                
+                {submitResult.success && submitResult.data && (
+                  <div className="border-t border-green-500/30 pt-3 space-y-2 text-sm">
+                    <h4 className="font-semibold text-green-300">Submitted Details:</h4>
+                    <div className="grid sm:grid-cols-2 gap-2 text-green-100">
+                      <div><span className="text-green-400">Name:</span> {submitResult.data.name}</div>
+                      <div><span className="text-green-400">Email:</span> {submitResult.data.email}</div>
+                      <div><span className="text-green-400">Attendance:</span> {submitResult.data.attendance === 'yes' ? 'Attending' : submitResult.data.attendance === 'maybe' ? 'Maybe' : 'Not Attending'}</div>
+                      <div><span className="text-green-400">Party Size:</span> {submitResult.data.partySize}</div>
+                      {(submitResult.data.partyNames || []).length > 0 && (
+                        <div className="sm:col-span-2"><span className="text-green-400">Guests:</span> {submitResult.data.partyNames.join(', ')}</div>
+                      )}
+                      {submitResult.data.foodSelections && submitResult.data.foodSelections.length > 0 && (
+                        <div className="sm:col-span-2">
+                          <span className="text-green-400">Food Bringing:</span>
+                          <ul className="list-disc list-inside mt-1 ml-4">
+                            {submitResult.data.foodSelections.map((f, i) => (
+                              <li key={i}>{f.name}{f.dishName && ` - ${f.dishName}`} ({f.category})</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubmitResult(null);
+                        setFormData({
+                          name: '', email: '', phone: '',
+                          attendance: 'yes', partySize: 1, partyNames: [], foodSelections: [], dietaryRestrictions: [],
+                          specialRequests: '', customFood: '', customFoodCategory: 'sides',
+                        });
+                        setStep(1);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="mt-4 px-6 py-2 bg-xmas-gold text-xmas-night font-semibold rounded-lg hover:bg-xmas-gold/80 transition-colors inline-flex items-center space-x-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Submit Another RSVP</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -360,13 +463,14 @@ export const RSVPForm = () => {
                     {errors.partySize && <p className="mt-1 text-sm text-red-400">{errors.partySize}</p>}
                     {formData.partySize > 1 && (
                       <div className="mt-4">
-                        <label className="label">Names of your guests (optional)</label>
+                        <label className="label">Names of your guests *</label>
+                        {errors.partyNames && <p className="mb-2 text-sm text-red-400">{errors.partyNames}</p>}
                         <div className="grid sm:grid-cols-2 gap-3">
                           {Array.from({ length: formData.partySize - 1 }, (_, i) => (
                             <input
                               key={i}
                               type="text"
-                              className="input-field"
+                              className={`input-field ${errors.partyNames && !((formData.partyNames || [])[i] || '').trim() ? 'border-red-500 focus:ring-red-500' : ''}`}
                               placeholder={`Guest ${i + 2} name`}
                               value={(formData.partyNames || [])[i] || ''}
                               onChange={e => handlePartyName(i, e.target.value)}
@@ -404,10 +508,11 @@ export const RSVPForm = () => {
                         <p className="text-sm" dangerouslySetInnerHTML={{ __html: POTLUCK_NOTE }} />
                       </div>
                       {/* Required dishes message */}
-                      <div className={`p-4 rounded-xl border text-sm ${errors.food && short ? 'bg-red-900/30 border-red-500/50 text-red-300' : 'bg-xmas-gold/10 border-xmas-gold/30 text-xmas-cream'}`}>
+                      <div className={`p-4 rounded-xl border text-sm ${(errors.food && short) || errors.dishName ? 'bg-red-900/30 border-red-500/50 text-red-300' : 'bg-xmas-gold/10 border-xmas-gold/30 text-xmas-cream'}`}>
                         <strong>Required:</strong> {needed} {needed === 1 ? 'dish' : 'different dishes'} for your party of {formData.partySize}
-                        {' '}(appetizer, main, side, or dessert; drinks don't count). Selected: {have}/{needed}
+                        {' '}(appetizer, hot veggie, starch, or dessert). Selected: {have}/{needed}
                         {errors.food && short && <p className="mt-1">{errors.food}</p>}
+                        {errors.dishName && <p className="mt-1">{errors.dishName}</p>}
                       </div>
                     </div>
                   );
@@ -416,16 +521,56 @@ export const RSVPForm = () => {
                 <div className="space-y-6">
                   {FOOD_CATEGORIES.map((category) => (
                     <div key={category.id} className="card p-4">
-                      <h3 className="flex items-center space-x-2 text-xmas-gold mb-4"><span className="text-2xl">{category.icon}</span><span className="font-display text-xl">{category.name}</span></h3>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="flex items-center space-x-2 text-xmas-gold"><span className="text-2xl">{category.icon}</span><span className="font-display text-xl">{category.name}</span></h3>
+                        {category.recipeSuggestions && category.recipeSuggestions.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setShowRecipeIdeas(showRecipeIdeas === category.id ? null : category.id)}
+                            className="text-xmas-gold/80 hover:text-xmas-gold text-xs font-medium flex items-center space-x-1 px-2 py-1 rounded border border-xmas-gold/30 bg-xmas-gold/5 transition-colors"
+                          >
+                            <BookOpen className="w-3 h-3" />
+                            <span>Recipe Ideas</span>
+                            <ChevronDown className={`w-3 h-3 transition-transform ${showRecipeIdeas === category.id ? 'rotate-180' : ''}`} />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Recipe Ideas Dropdown */}
+                      {showRecipeIdeas === category.id && category.recipeSuggestions && (
+                        <div className="mb-4 p-3 bg-xmas-night/50 border border-xmas-gold/20 rounded-lg animate-fade-in">
+                          <p className="text-xs text-xmas-cream/60 mb-2">Tap "Use this dish" to fill a free slot, or open a recipe link. You can also type your own dish name on any slot:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {category.recipeSuggestions.map((suggestion, idx) => (
+                              <SuggestionChip
+                                key={idx}
+                                suggestion={suggestion}
+                                onUse={() => {
+                                  const slot = category.options.find(opt =>
+                                    !formData.foodSelections.some(f => f.id === opt.id) &&
+                                    !isHostProvided({ ...opt, category: category.id }) &&
+                                    getFoodBringers({ ...opt, category: category.id }).length === 0
+                                  );
+                                  if (slot) addFoodWithDish({ ...slot, category: category.id }, suggestion);
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <p className="mb-3 text-xs text-xmas-gold/80">💡 Tip: {HAWAIIAN_TIP}</p>
                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {category.options.map((food) => {
+                        {[...category.options, ...getCustomFoods(category.id)].map((food) => {
                           const foodWithCategory = { ...food, category: category.id };
-                          const isSelected = formData.foodSelections.some(f => f.id === food.id);
+                          const selectedFood = formData.foodSelections.find(f => f.id === food.id);
+                          const isSelected = !!selectedFood;
                           const bringers = getFoodBringers(foodWithCategory);
                           const hostProvided = isHostProvided(foodWithCategory);
                           const recipeData = getRecipeData(foodWithCategory);
                           const isTaken = bringers.length > 0;
                           const isDisabled = isTaken || hostProvided;
+                          const dishName = selectedFood?.dishName || '';
 
                           const dietaryTags = recipeData?.dietaryTags || [];
                           const imageUrl = recipeData?.imageUrl;
@@ -462,6 +607,15 @@ export const RSVPForm = () => {
                                         {foodWithCategory.name}
                                       </p>
                                       <p className="text-xs text-xmas-cream/50">Serves ~{foodWithCategory.serves} people</p>
+                                      {recipeData?.recipes?.length > 0 && (
+                                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                                          {recipeData.recipes.slice(0, 2).map((r, i) => (
+                                            <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="inline-flex items-center space-x-1 text-xs text-xmas-cream/70 hover:text-xmas-gold hover:underline">
+                                              <ExternalLink className="w-3 h-3" /><span>{r.name}</span>
+                                            </a>
+                                          ))}
+                                        </div>
+                                      )}
 
                                       {hostProvided && (
                                         <span className="inline-block mt-1 bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold">HOST PROVIDED</span>
@@ -469,7 +623,7 @@ export const RSVPForm = () => {
                                       {bringers.length > 0 && (
                                         <p className="mt-1 text-xs text-xmas-green flex items-start space-x-1">
                                           <UsersIcon className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                                          <span className="break-words">Bringing: {bringers.join(', ')}</span>
+                                          <span className="break-words">Bringing: {bringers.map(b => (b.dishName ? `${b.dishName} (${b.name})` : b.name)).join(', ')}</span>
                                         </p>
                                       )}
 
@@ -484,6 +638,21 @@ export const RSVPForm = () => {
                                               </span>
                                             ) : null;
                                           })}
+                                        </div>
+                                      )}
+
+                                      {/* Dish Name Input - shown when selected */}
+                                      {isSelected && (
+                                        <div className="mt-2">
+                                          <span className="block text-xs text-xmas-cream/60 mb-1">Your Dish Name (required):</span>
+                                          <input
+                                            type="text"
+                                            value={dishName}
+                                            onChange={(e) => updateDishName(food.id, e.target.value)}
+                                            placeholder={category.dishPlaceholder || 'Name your dish'}
+                                            className="w-full px-3 py-1.5 bg-xmas-night/50 border border-xmas-gold/30 rounded-lg text-xmas-cream placeholder-xmas-cream/40 text-sm focus:outline-none focus:border-xmas-gold focus:ring-1 focus:ring-xmas-gold"
+                                            maxLength={50}
+                                          />
                                         </div>
                                       )}
                                     </div>
@@ -511,41 +680,6 @@ export const RSVPForm = () => {
                       </div>
                     </div>
                   ))}
-                </div>
-
-                {/* Custom Food Option */}
-                <div className="card p-4">
-                  <h3 className="flex items-center space-x-2 text-xmas-gold mb-4">
-                    <span className="text-2xl">🌺</span>
-                    <span className="font-display text-xl">Add Your Own Dish</span>
-                  </h3>
-                  <p className="text-xmas-cream/70 text-sm mb-3">
-                    Don't see what you want to bring? Add a custom dish!{' '}
-                    <span className="text-xmas-gold font-medium">💡 Tip:</span> Make it Hawaiian-style - think kalua pig, poke, haupia, malasadas, poi, lomi salmon, or any tropical twist!
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                      type="text"
-                      className="input-field flex-1"
-                      placeholder="Enter your custom dish (e.g., 'Grandma&apos;s Pineapple Fried Rice')"
-                      value={formData.customFood}
-                      onChange={e => handleChange('customFood', e.target.value)}
-                    />
-                    <select
-                      className="input-field w-auto"
-                      value={formData.customFoodCategory || 'sides'}
-                      onChange={e => handleChange('customFoodCategory', e.target.value)}
-                    >
-                      <option value="appetizers">🥥 Pūpū (Appetizers)</option>
-                      <option value="mains">🐷 Mea ʻAi Nui (Main Dishes)</option>
-                      <option value="sides">🍠 Sides & Starches</option>
-                      <option value="desserts">🍍 Mea ʻOno (Desserts)</option>
-                      <option value="drinks">🍹 Inu (Drinks)</option>
-                    </select>
-                  </div>
-                  <p className="text-xs text-xmas-cream/50 mt-2">
-                    Your custom dish will appear in the selected category for others to see.
-                  </p>
                 </div>
 
                 <div className="card p-4">

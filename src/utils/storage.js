@@ -11,6 +11,15 @@ FOOD_CATEGORIES.forEach(cat => {
 });
 
 const STORAGE_KEY = 'xmas2026_rsvps';
+
+// Dish names ride inside the existing "Food Selections" sheet column, e.g.
+// "Kalua Pig :: Smoky Kalua (serves 10) [mains]" -> no new sheet columns, no Apps Script change.
+const DISH_SEP = ' :: ';
+const cleanDishName = (n) => String(n || '').replace(/[()\[\]{},]/g, ' ').replace(/::/g, ' ').replace(/\s+/g, ' ').trim();
+const packFoodSelections = (list) => (list || []).map(f => {
+  const dish = cleanDishName(f.dishName);
+  return dish ? { ...f, name: `${f.name}${DISH_SEP}${dish}` } : f;
+});
 const ADMIN_SESSION_KEY = 'xmas2026_admin_session';
 
 // Party names live inside the existing "Special Requests" sheet column ("[Party: A, B] message"),
@@ -192,7 +201,7 @@ export const exportRSVPsAsCSV = () => {
     r.attendance === 'yes' ? 'Attending' : r.attendance === 'maybe' ? 'Maybe' : 'Not Attending',
     r.partySize,
     (r.partyNames || []).join('; '),
-    (r.foodSelections || []).map(f => `${f.name} (${f.category})`).join('; '),
+    (r.foodSelections || []).map(f => `${f.name}${f.dishName ? ' - ' + f.dishName : ''} (${f.category})`).join('; '),
     (r.dietaryRestrictions || []).join('; '),
     r.specialRequests || '',
     new Date(r.submittedAt).toLocaleString(),
@@ -295,7 +304,7 @@ export const exportRSVPsAsPDF = () => {
       r.phone || '',
       r.attendance === 'yes' ? 'Attending' : r.attendance === 'maybe' ? 'Maybe' : 'Not Attending',
       r.partySize.toString(),
-      (r.foodSelections || []).map(f => `${f.name} (${f.category})`).join(', ') || 'None',
+      (r.foodSelections || []).map(f => `${f.name}${f.dishName ? ' - ' + f.dishName : ''} (${f.category})`).join(', ') || 'None',
       (r.dietaryRestrictions || []).join(', ') || 'None',
       ([(r.partyNames || []).length ? 'Party: ' + r.partyNames.join(', ') : '', r.specialRequests || ''].filter(Boolean).join(' | ')).substring(0, 80) || 'None',
       new Date(r.submittedAt).toLocaleDateString(),
@@ -383,7 +392,7 @@ export const sendToGoogleSheets = async (rsvpData) => {
       headers: { 
         'Content-Type': 'text/plain;charset=utf-8' 
       },
-      body: JSON.stringify({ ...rsvpData, specialRequests: packSpecialRequests(rsvpData) }),
+      body: JSON.stringify({ ...rsvpData, foodSelections: packFoodSelections(rsvpData.foodSelections), specialRequests: packSpecialRequests(rsvpData) }),
       signal: controller.signal,
     });
     
@@ -421,7 +430,7 @@ const normalizeSheetsRow = (row) => {
           const rawCategory = match[3].trim();
           // The category stored is already the category ID (e.g., 'appetizers')
           // Check if it's a valid category ID, otherwise try to map from full name
-          const validCategoryIds = ['appetizers', 'mains', 'sides', 'desserts', 'drinks'];
+          const validCategoryIds = FOOD_CATEGORIES.map(c => c.id);
           if (validCategoryIds.includes(rawCategory.toLowerCase())) {
             category = rawCategory.toLowerCase();
           } else {
@@ -437,18 +446,28 @@ const normalizeSheetsRow = (row) => {
           }
         }
         
+        // Split "Food Name :: Dish Name" back apart
+        let dishName = '';
+        const sepIdx = name.indexOf(DISH_SEP);
+        if (sepIdx >= 0) {
+          dishName = name.slice(sepIdx + DISH_SEP.length).trim();
+          name = name.slice(0, sepIdx).trim();
+        }
+        let isKnownFood = false;
         // Find the food ID by matching name against FOOD_CATEGORIES
         let foodId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         // Try to find exact match in FOOD_CATEGORIES
         for (const cat of FOOD_CATEGORIES) {
-          const found = cat.options.find(opt => opt.name === name);
+          const found = cat.options.find(opt => opt.name === name) || (cat.name === name ? cat.options[0] : null);
           if (found) {
             foodId = found.id;
+            isKnownFood = true;
+            name = found.name;
             break;
           }
         }
         
-        return { name, serves, category, id: foodId };
+        return { name, serves, category, id: foodId, ...(dishName ? { dishName } : {}), ...(isKnownFood ? {} : { isCustom: true }) };
       })
     : [];
   
@@ -538,7 +557,7 @@ export const syncFromGoogleSheets = async () => {
     });
     
     // Merge: start with remote, add any local that aren't in remote
-    const merged = [...remoteRSVPs];
+    const merged = [...remoteMap.values(), ...remoteRSVPs.filter(r => !r.email)];
     localRSVPs.forEach(local => {
       if (local.email && !remoteMap.has(local.email.toLowerCase())) {
         merged.push(local);

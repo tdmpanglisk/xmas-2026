@@ -1,0 +1,574 @@
+import { GOOGLE_SHEETS_WEBAPP_URL, EVENT_CONFIG, FOOD_CATEGORIES } from '../constants';
+import { jsPDF } from 'jspdf';
+// Using simple table rendering without autotable to avoid build issues
+
+// Map full category names to category IDs
+const CATEGORY_NAME_TO_ID = {};
+FOOD_CATEGORIES.forEach(cat => {
+  CATEGORY_NAME_TO_ID[cat.name.toLowerCase()] = cat.id;
+  // Also map common variations
+  CATEGORY_NAME_TO_ID[cat.id.toLowerCase()] = cat.id;
+});
+
+const STORAGE_KEY = 'xmas2026_rsvps';
+
+// Dish names ride inside the existing "Food Selections" sheet column, e.g.
+// "Kalua Pig :: Smoky Kalua (serves 10) [mains]" -> no new sheet columns, no Apps Script change.
+const DISH_SEP = ' :: ';
+const cleanDishName = (n) => String(n || '').replace(/[()\[\]{},]/g, ' ').replace(/::/g, ' ').replace(/\s+/g, ' ').trim();
+const packFoodSelections = (list) => (list || []).map(f => {
+  const dish = cleanDishName(f.dishName);
+  return dish ? { ...f, name: `${f.name}${DISH_SEP}${dish}` } : f;
+});
+const ADMIN_SESSION_KEY = 'xmas2026_admin_session';
+
+// Party names live inside the existing "Special Requests" sheet column ("[Party: A, B] message"),
+// so the Google Sheet needs no new columns.
+const PARTY_TAG = /^\[Party:\s*([^\]]*)\]\s*/;
+const cleanPartyName = (n) => String(n).replace(/[\[\],]/g, ' ').replace(/\s+/g, ' ').trim();
+const packSpecialRequests = (r) => {
+  const names = (r.partyNames || []).map(cleanPartyName).filter(Boolean);
+  const msg = r.specialRequests || '';
+  return names.length ? `[Party: ${names.join(', ')}]${msg ? ' ' + msg : ''}` : msg;
+};
+const unpackSpecialRequests = (raw) => {
+  const text = String(raw || '');
+  const m = text.match(PARTY_TAG);
+  if (!m) return { partyNames: [], specialRequests: text };
+  return {
+    partyNames: m[1].split(',').map(s => s.trim()).filter(Boolean),
+    specialRequests: text.slice(m[0].length),
+  };
+};
+
+/**
+ * Get all RSVPs from localStorage
+ */
+export const getAllRSVPs = () => {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Failed to parse RSVPs from storage:', error);
+    return [];
+  }
+};
+
+/**
+ * Save RSVP to localStorage
+ */
+export const saveRSVP = (rsvpData) => {
+  try {
+    const existing = getAllRSVPs();
+    // Check if email already exists (update instead of duplicate)
+    const existingIndex = existing.findIndex(r => r.email.toLowerCase() === rsvpData.email.toLowerCase());
+    
+    const newRSVP = {
+      ...rsvpData,
+      id: existingIndex >= 0 ? existing[existingIndex].id : crypto.randomUUID(),
+      submittedAt: existingIndex >= 0 ? existing[existingIndex].submittedAt : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (existingIndex >= 0) {
+      existing[existingIndex] = newRSVP;
+    } else {
+      existing.push(newRSVP);
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+    return { success: true, rsvp: newRSVP };
+  } catch (error) {
+    console.error('Failed to save RSVP:', error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Get RSVP by email
+ */
+export const getRSVPByEmail = (email) => {
+  const all = getAllRSVPs();
+  return all.find(r => r.email.toLowerCase() === email.toLowerCase()) || null;
+};
+
+/**
+ * Delete RSVP (admin only)
+ */
+export const deleteRSVP = (id) => {
+  try {
+    const existing = getAllRSVPs();
+    const filtered = existing.filter(r => r.id !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to delete RSVP:', error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Delete RSVP from Google Sheets by email
+ * Requires Google Apps Script to handle DELETE action
+ */
+export const deleteFromGoogleSheets = async (email) => {
+  const url = GOOGLE_SHEETS_WEBAPP_URL;
+  if (!url) return { success: false, error: 'No Google Sheets URL configured' };
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    // Use no-cors mode to avoid CORS preflight issues with Google Apps Script
+    // We can't read response, but request will still be processed
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', email }),
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    // With no-cors, response is opaque - assume success if no network error
+    return { success: true, opaque: true };
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      return { success: false, error: 'Request timeout - Google Sheets delete timed out' };
+    }
+    console.error('Delete from Google Sheets failed:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Clear all RSVPs (admin only)
+ */
+export const clearAllRSVPs = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to clear RSVPs:', error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Admin session management
+ */
+export const setAdminSession = (authenticated) => {
+  if (authenticated) {
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ 
+      authenticated: true, 
+      timestamp: Date.now() 
+    }));
+  } else {
+    localStorage.removeItem(ADMIN_SESSION_KEY);
+  }
+};
+
+export const checkAdminSession = () => {
+  try {
+    const data = localStorage.getItem(ADMIN_SESSION_KEY);
+    if (!data) return false;
+    const session = JSON.parse(data);
+    // Session expires after 24 hours
+    return session.authenticated && (Date.now() - session.timestamp) < 24 * 60 * 60 * 1000;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Export RSVPs as CSV
+ */
+export const exportRSVPsAsCSV = () => {
+  const rsvps = getAllRSVPs();
+  if (rsvps.length === 0) return null;
+
+  const headers = [
+    'Name', 'Email', 'Phone', 'Attendance', 'Party Size', 'Party Names',
+    'Food Selections', 'Dietary Restrictions', 'Special Requests',
+    'Submitted At', 'Updated At'
+  ];
+
+  const rows = rsvps.map(r => [
+    r.name,
+    r.email,
+    r.phone || '',
+    r.attendance === 'yes' ? 'Attending' : r.attendance === 'maybe' ? 'Maybe' : 'Not Attending',
+    r.partySize,
+    (r.partyNames || []).join('; '),
+    (r.foodSelections || []).map(f => `${f.name}${f.dishName ? ' - ' + f.dishName : ''} (${f.category})`).join('; '),
+    (r.dietaryRestrictions || []).join('; '),
+    r.specialRequests || '',
+    new Date(r.submittedAt).toLocaleString(),
+    new Date(r.updatedAt).toLocaleString(),
+  ]);
+
+  const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
+  return csvContent;
+};
+
+/**
+ * Download CSV file
+ */
+export const downloadCSV = (csvContent, filename = 'xmas2026_rsvps.csv') => {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
+};
+
+/**
+ * Export RSVPs as professional PDF
+ */
+export const exportRSVPsAsPDF = () => {
+  const rsvps = getAllRSVPs();
+  if (rsvps.length === 0) return null;
+
+  const doc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  // Title
+  doc.setFontSize(22);
+  doc.setTextColor(178, 34, 34); // Dark red
+  doc.text(EVENT_CONFIG.name, 14, 20);
+
+  // Subtitle
+  doc.setFontSize(12);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`RSVP Report - Generated ${new Date().toLocaleDateString()}`, 14, 28);
+  doc.text(`${EVENT_CONFIG.date} | ${EVENT_CONFIG.time} | ${EVENT_CONFIG.address}`, 14, 34);
+
+  // Simple table header - fit within A4 landscape (297mm - 20mm margins = 277mm)
+  let y = 42;
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.setFillColor(178, 34, 34);
+  
+  // Column widths that fit within page (total = 252mm, with 10mm margins = 272mm < 277mm)
+  const colWidths = [24, 34, 22, 18, 12, 54, 24, 38, 18]; // Total = 244mm
+  const headers = ['Name', 'Email', 'Phone', 'Status', 'Guests', 'Food', 'Dietary', 'Special', 'Date'];
+  const totalWidth = colWidths.reduce((a,b) => a+b, 0);
+  const leftMargin = 10;
+  const rightMargin = 10;
+  
+  // Verify page fit
+  if (leftMargin + totalWidth + rightMargin > 297) {
+    console.warn('PDF table exceeds page width');
+  }
+  
+  const drawHeader = (startY) => {
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.setFillColor(178, 34, 34);
+    doc.rect(leftMargin, startY, totalWidth, 8, 'F');
+    let hx = leftMargin;
+    headers.forEach((header, i) => {
+      doc.text(header, hx + 1, startY + 5, { maxWidth: colWidths[i] - 2 });
+      hx += colWidths[i];
+    });
+    return startY + 8;
+  };
+  
+  y = drawHeader(y);
+  
+  // Draw data rows
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(50, 50, 50);
+  
+  rsvps.forEach((r, rowIndex) => {
+    if (y > 270) { // Add new page if needed
+      doc.addPage();
+      y = drawHeader(20);
+    }
+    
+    if (rowIndex % 2 === 0) {
+      doc.setFillColor(255, 245, 230);
+      doc.rect(leftMargin, y, totalWidth, 7, 'F');
+    }
+    
+    const rowData = [
+      r.name,
+      r.email,
+      r.phone || '',
+      r.attendance === 'yes' ? 'Attending' : r.attendance === 'maybe' ? 'Maybe' : 'Not Attending',
+      r.partySize.toString(),
+      (r.foodSelections || []).map(f => `${f.name}${f.dishName ? ' - ' + f.dishName : ''} (${f.category})`).join(', ') || 'None',
+      (r.dietaryRestrictions || []).join(', ') || 'None',
+      ([(r.partyNames || []).length ? 'Party: ' + r.partyNames.join(', ') : '', r.specialRequests || ''].filter(Boolean).join(' | ')).substring(0, 80) || 'None',
+      new Date(r.submittedAt).toLocaleDateString(),
+    ];
+    
+    let x = leftMargin;
+    rowData.forEach((cell, i) => {
+      // Truncate long text to fit column - more conservative for font size 7
+      const maxChars = Math.floor(colWidths[i] / 1.8);
+      const text = String(cell).substring(0, maxChars);
+      // Ensure text doesn't overflow column
+      doc.text(text, x + 1, y + 5, { maxWidth: colWidths[i] - 2 });
+      x += colWidths[i];
+    });
+    y += 7;
+  });
+
+  // Footer with stats
+  const attending = rsvps.filter(r => r.attendance === 'yes').length;
+  const maybe = rsvps.filter(r => r.attendance === 'maybe').length;
+  const notAttending = rsvps.filter(r => r.attendance === 'no').length;
+  const totalGuests = rsvps.filter(r => r.attendance === 'yes').reduce((sum, r) => sum + r.partySize, 0);
+
+  y += 10;
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Total: ${rsvps.length} responses | Attending: ${attending} | Maybe: ${maybe} | Not Attending: ${notAttending} | Total Guests: ${totalGuests}`, 14, y);
+
+  return doc;
+};
+
+/**
+ * Download PDF file
+ */
+export const downloadPDF = (doc, filename = 'xmas2026_rsvps.pdf') => {
+  if (doc) doc.save(filename);
+};
+
+/**
+ * Get statistics
+ */
+export const getStats = () => {
+  const rsvps = getAllRSVPs();
+  const attending = rsvps.filter(r => r.attendance === 'yes');
+  const maybe = rsvps.filter(r => r.attendance === 'maybe');
+  const notAttending = rsvps.filter(r => r.attendance === 'no');
+  
+  const totalGuests = attending.reduce((sum, r) => sum + r.partySize, 0);
+  const maybeGuests = maybe.reduce((sum, r) => sum + r.partySize, 0);
+
+  const foodCounts = {};
+  attending.forEach(r => {
+    (r.foodSelections || []).forEach(f => {
+      foodCounts[f.id] = (foodCounts[f.id] || 0) + 1;
+    });
+  });
+
+  return {
+    totalResponses: rsvps.length,
+    attending: attending.length,
+    maybe: maybe.length,
+    notAttending: notAttending.length,
+    totalConfirmedGuests: totalGuests,
+    potentialGuests: maybeGuests,
+    foodPopularity: foodCounts,
+  };
+};
+
+/**
+ * Transmit RSVP data safely to Google Sheets Web App
+ */
+export const sendToGoogleSheets = async (rsvpData) => {
+  const url = GOOGLE_SHEETS_WEBAPP_URL;
+  if (!url) return { success: false, error: 'No Google Sheets URL configured' };
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    // Convert the payload to a standard URL-encoded form string or text plain content 
+    // to ensure no-cors allows the body transmission safely past Google's perimeter guards
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors', 
+      headers: { 
+        'Content-Type': 'text/plain;charset=utf-8' 
+      },
+      body: JSON.stringify({ ...rsvpData, foodSelections: packFoodSelections(rsvpData.foodSelections), specialRequests: packSpecialRequests(rsvpData) }),
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    return { success: true, opaque: true };
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      return { success: false, error: 'Request timeout - Google Sheets synchronization timed out' };
+    }
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Normalize Google Sheets row to React app format
+ */
+const normalizeSheetsRow = (row) => {
+  // Safe extraction matching either native column headers or lowercased strings returned from the spreadsheet data cells
+  const timestamp = row['Timestamp'] || row['timestamp'] || new Date().toISOString();
+  const attendanceRaw = String(row['Attendance'] || row['attendance'] || '').toLowerCase();
+  const attendance = attendanceRaw.includes('attend') || attendanceRaw.includes('yes') ? 'yes' : attendanceRaw.includes('maybe') ? 'maybe' : 'no';
+  
+  const foodsStr = row['Food Selections'] || row['foodSelections'] || row['Foods'] || '';
+  const foodSelections = foodsStr !== 'None' && foodsStr !== '' 
+    ? foodsStr.split(', ').map(f => {
+        // Match format: "Food Name (serves X) [Category]"
+        const match = f.match(/(.+)\s*\(serves\s*(\d+)\)\s*\[([^\]]+)\]/i);
+        let category = 'unknown';
+        let name = f.trim();
+        let serves = 1;
+        
+        if (match) {
+          name = match[1].trim();
+          serves = parseInt(match[2]);
+          const rawCategory = match[3].trim();
+          // The category stored is already the category ID (e.g., 'appetizers')
+          // Check if it's a valid category ID, otherwise try to map from full name
+          const validCategoryIds = ['appetizers', 'mains', 'sides', 'desserts', 'drinks'];
+          if (validCategoryIds.includes(rawCategory.toLowerCase())) {
+            category = rawCategory.toLowerCase();
+          } else {
+            // Fallback: map full category name to category ID
+            category = CATEGORY_NAME_TO_ID[rawCategory.toLowerCase()] || 'unknown';
+          }
+        } else {
+          // Fallback for old format without category
+          const matchOld = f.match(/(.+)\s*\(serves\s*(\d+)\)/i);
+          if (matchOld) {
+            name = matchOld[1].trim();
+            serves = parseInt(matchOld[2]);
+          }
+        }
+        
+        // Split "Food Name :: Dish Name" back apart
+        let dishName = '';
+        const sepIdx = name.indexOf(DISH_SEP);
+        if (sepIdx >= 0) {
+          dishName = name.slice(sepIdx + DISH_SEP.length).trim();
+          name = name.slice(0, sepIdx).trim();
+        }
+        let isKnownFood = false;
+        // Find the food ID by matching name against FOOD_CATEGORIES
+        let foodId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        // Try to find exact match in FOOD_CATEGORIES
+        for (const cat of FOOD_CATEGORIES) {
+          const found = cat.options.find(opt => opt.name === name);
+          if (found) {
+            foodId = found.id;
+            isKnownFood = true;
+            break;
+          }
+        }
+        
+        return { name, serves, category, id: foodId, ...(dishName ? { dishName } : {}), ...(isKnownFood ? {} : { isCustom: true }) };
+      })
+    : [];
+  
+  const dietaryStr = row['Dietary Restrictions'] || row['dietaryRestrictions'] || row['Dietary'] || '';
+  const dietaryRestrictions = dietaryStr !== 'None' && dietaryStr !== ''
+    ? dietaryStr.split(', ').map(d => d.trim())
+    : [];
+  
+  return {
+    id: crypto.randomUUID(),
+    name: row['Name'] || row['name'] || '',
+    email: row['Email'] || row['email'] || '',
+    phone: row['Phone'] || row['phone'] || '',
+    attendance,
+    partySize: parseInt(row['Party Size'] || row['partySize'] || row['PartySize'] || '1'),
+    foodSelections,
+    dietaryRestrictions,
+    ...unpackSpecialRequests(row['Special Requests'] || row['specialRequests'] || row['Special'] || ''),
+    submittedAt: timestamp,
+    updatedAt: new Date().toISOString(),
+  };
+};
+
+
+/**
+ * Fetch RSVPs from Google Sheets Web App
+ * Note: Requires the Google Apps Script to be deployed with "Anyone" access and handle GET requests
+ */
+export const fetchFromGoogleSheets = async () => {
+  const url = GOOGLE_SHEETS_WEBAPP_URL;
+  if (!url) return { success: false, error: 'No Google Sheets URL configured' };
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    // Fetch data from Google Sheets (GET request)
+    const response = await fetch(url, {
+      method: 'GET',
+      // 'follow' forces the browser to handle Google's internal 302 redirects automatically
+      redirect: 'follow', 
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    // Read response text first to handle plain-text JSON delivery safely
+    const textData = await response.text();
+    const rawData = JSON.parse(textData);
+    
+    // Normalize Google Sheets format to React app format
+    const data = Array.isArray(rawData) ? rawData.map(normalizeSheetsRow) : [];
+    
+    return { success: true, data };
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      return { success: false, error: 'Request timeout - Google Sheets fetch timed out' };
+    }
+    console.error('Failed to fetch from Google Sheets:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+
+/**
+ * Sync RSVPs from Google Sheets to localStorage
+ * Merges remote data with local data (remote takes precedence for conflicts)
+ */
+export const syncFromGoogleSheets = async () => {
+  const result = await fetchFromGoogleSheets();
+  if (!result.success) {
+    return result;
+  }
+  
+  try {
+    const remoteRSVPs = result.data || [];
+    const localRSVPs = getAllRSVPs();
+    
+    // Create map of remote RSVPs by email for quick lookup
+    const remoteMap = new Map();
+    remoteRSVPs.forEach(r => {
+      if (r.email) remoteMap.set(r.email.toLowerCase(), r);
+    });
+    
+    // Merge: start with remote, add any local that aren't in remote
+    const merged = [...remoteMap.values(), ...remoteRSVPs.filter(r => !r.email)];
+    localRSVPs.forEach(local => {
+      if (local.email && !remoteMap.has(local.email.toLowerCase())) {
+        merged.push(local);
+      }
+    });
+    
+    // Save merged to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    
+    return { success: true, count: merged.length, synced: remoteRSVPs.length };
+  } catch (error) {
+    console.error('Failed to sync from Google Sheets:', error);
+    return { success: false, error: error.message };
+  }
+};

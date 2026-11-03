@@ -68,7 +68,7 @@ export const sendGuestConfirmation = async (rsvpData) => {
       party_size: rsvpData.partySize,
       party_names: (rsvpData.partyNames || []).join(', ') || 'None',
       food_items: foodSelections.length > 0
-        ? foodSelections.map(f => `${f.name} (serves ${f.serves})`).join(', ')
+        ? foodSelections.map(f => `${f.name}${f.dishName ? ' - ' + f.dishName : ''} (serves ${f.serves})`).join(', ')
         : 'Not specified',
       dietary_restrictions: dietaryLabels || 'None',
       special_requests: rsvpData.specialRequests || 'None',
@@ -128,12 +128,12 @@ export const sendHostNotification = async (rsvpData) => {
       party_names: (rsvpData.partyNames || []).join(', ') || 'None',
       total_guests: rsvpData.partySize,
       food_items: foodSelections.length > 0
-        ? foodSelections.map(f => `• ${f.name} (serves ${f.serves}) [${f.category}]`).join('\n')
+        ? foodSelections.map(f => `• ${f.name}${f.dishName ? ' - ' + f.dishName : ''} (serves ${f.serves}) [${f.category}]`).join('\n')
         : 'No food selections',
       dietary_restrictions: dietaryLabels || 'None',
       special_requests: rsvpData.specialRequests || 'None',
       submitted_at: new Date().toLocaleString(),
-      event_date: 'December 20, 2026',
+      event_date: 'December 25, 2026',
     };
 
     const response = await emailjs.send(
