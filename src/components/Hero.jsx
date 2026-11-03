@@ -146,7 +146,7 @@ export const Hero = () => {
         <div className="text-center">
           {/* Subtitle - compact */}
           <p className="text-sm sm:text-base text-xmas-cream/70 max-w-2xl mx-auto mb-8 font-light leading-relaxed">
-            Join us for a tropical holiday celebration with Kālua Pig, poi, haupia, and aloha spirit. 
+            Join us for a tropical holiday celebration with Roast Pig and aloha spirit. 
             Bring your leis, wear your best aloha shirts, and let&apos;s make memories under the palms!
           </p>
 
