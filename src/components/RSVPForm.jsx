@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Check, X, User, Mail, Phone, Users, Utensils, Heart, AlertCircle, ChevronDown, ExternalLink, Sparkles, Users as UsersIcon, Star, Shield, Plus, BookOpen } from 'lucide-react';
-import { ATTENDANCE_OPTIONS, PARTY_SIZE_OPTIONS, FOOD_CATEGORIES, DIETARY_OPTIONS, EVENT_CONFIG, RECIPE_DATA, POTLUCK_NOTE, HAWAIIAN_TIP } from '../constants';
+import { ATTENDANCE_OPTIONS, PARTY_SIZE_OPTIONS, FOOD_CATEGORIES, DIETARY_OPTIONS, EVENT_CONFIG, RECIPE_DATA, POTLUCK_NOTE, HAWAIIAN_TIP, DISH_GUIDANCE } from '../constants';
 import { saveRSVP, sendToGoogleSheets, getAllRSVPs, syncFromGoogleSheets } from '../utils/storage';
 import { sendRSVPEmails } from '../utils/emailService';
 import { ChristmasBackground } from './ChristmasBackground';
 import { SuggestionChip } from './SuggestionChip';
+import { RSVPSuccess } from './RSVPSuccess';
 
 // 1 dish for parties of 1-3, 2 different dishes for parties of 4+
 const requiredDishes = (partySize) => (partySize >= 4 ? 2 : 1);
@@ -37,25 +38,30 @@ export const RSVPForm = () => {
 
   // Load RSVPs on mount and sync
   useEffect(() => {
-    setRsvps(getAllRSVPs());
-    syncFromGoogleSheets().then(() => setRsvps(getAllRSVPs()));
-  }, []);
+  if (step !== 3) return;
+  let cancelled = false;
+  const refresh = () => syncFromGoogleSheets().then(() => { if (!cancelled) setRsvps(getAllRSVPs()); });
+  refresh();
+  const t = setInterval(refresh, 20000);
+  return () => { cancelled = true; clearInterval(t); };
+}, [step]);
 
   const getFoodBringers = (food) => {
-    const me = (formData.email || '').trim().toLowerCase();
-    const bringers = [];
-    rsvps.filter(r => r.attendance === 'yes').forEach(rsvp => {
-      // Your own earlier RSVP (same email) shouldn't lock you out of your dishes when editing
-      if (me && (rsvp.email || '').toLowerCase() === me) return;
-      (rsvp.foodSelections || []).forEach(f => {
-        // Primary match by food ID, fallback by name
-        if ((food.id && f.id === food.id) || f.name === food.name) {
-          bringers.push({ name: rsvp.name, dishName: f.dishName || '' });
-        }
-      });
+  const me = (formData.email || '').trim().toLowerCase();
+  const bringers = [];
+  rsvps.filter(r => r.attendance === 'yes').forEach(rsvp => {
+    (rsvp.foodSelections || []).forEach(f => {
+      if ((food.id && f.id === food.id) || f.name === food.name) {
+        bringers.push({
+          name: rsvp.name,
+          dishName: f.dishName || '',
+          isMe: !!me && (rsvp.email || '').toLowerCase() === me,
+        });
+      }
     });
-    return bringers;
-  };
+  });
+  return bringers;
+};
 
   // Custom dishes other guests added, so they show in step 3 like they do on the menu
   const getCustomFoods = (categoryId) => {
@@ -100,8 +106,8 @@ export const RSVPForm = () => {
       const needed = requiredDishes(formData.partySize);
       if (countDishes(formData) < needed) {
         newErrors.food = needed === 2
-          ? 'Parties of 4 or more: please sign up for 2 different dishes (appetizer, hot veggie, starch, or dessert).'
-          : 'Please sign up for 1 dish (appetizer, hot veggie, starch, or dessert).';
+          ? 'Parties of 4 or more: please sign up for 2 different dishes (appetizer, protein, hot veggie, starch, or dessert).'
+          : 'Please sign up for 1 dish (appetizer, protein, hot veggie, starch, or dessert).';
       }
     }
     if (currentStep === 3 && formData.attendance === 'yes' && !newErrors.food) {
@@ -179,6 +185,23 @@ export const RSVPForm = () => {
     setIsSubmitting(true);
     setSubmitResult(null);
 
+    // Re-check availability right before saving so two guests can't claim the same slot
+    try { await syncFromGoogleSheets(); } catch (err) { /* offline: fall back to what we have */ }
+    const latest = getAllRSVPs();
+    setRsvps(latest);
+    const me = formData.email.trim().toLowerCase();
+    const claimed = formData.foodSelections.filter(sel =>
+      latest.some(r => r.attendance === 'yes' && (r.email || '').toLowerCase() !== me &&
+        (r.foodSelections || []).some(f => f.id === sel.id || f.name === sel.name))
+    );
+    if (claimed.length > 0) {
+      setFormData(prev => ({ ...prev, foodSelections: prev.foodSelections.filter(f => !claimed.some(c => c.id === f.id)) }));
+      setSubmitResult({ success: false, message: `Sorry, ${claimed.map(c => c.name).join(', ')} was just claimed by another guest. It has been removed from your list - please pick another slot.` });
+      setIsSubmitting(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     // Include custom food in foodSelections if provided
     const foodSelections = [...formData.foodSelections];
     if (formData.customFood && formData.customFood.trim()) {
@@ -222,7 +245,8 @@ export const RSVPForm = () => {
       // Don't reset form or step - show success with submitted data
       // User can click "Submit Another RSVP" if needed
     } else {
-      setSubmitResult({ success: false, message: 'RSVP saved but email notification failed. We\'ll still receive your response!' });
+      setSubmitResult({ success: true, message: 'RSVP submitted successfully!', data: rsvpData, emailFailed: true });
+      setRsvps(getAllRSVPs());
     }
     setIsSubmitting(false);
   };
@@ -304,7 +328,7 @@ export const RSVPForm = () => {
           )}
           {(() => {
             const cat = FOOD_CATEGORIES.find(c => c.name === selectedFoodDetail.category);
-            const ideas = cat?.recipeSuggestions || [];
+            const ideas = (cat?.recipeSuggestions || []).filter(s => !selectedFoodDetail.food.keywords || selectedFoodDetail.food.keywords.some(k => s.toLowerCase().includes(k)));
             return ideas.length > 0 && !(selectedFoodDetail.recipeData?.recipes?.length > 0) ? (
               <div className="bg-xmas-gold/5 border border-xmas-gold/20 rounded-lg p-4">
                 <h3 className="flex items-center space-x-2 text-xmas-gold mb-2"><BookOpen className="w-5 h-5" /><span className="font-display text-lg">Recipe ideas</span></h3>
@@ -335,6 +359,22 @@ export const RSVPForm = () => {
     </div>
   );
 
+  const resetForm = () => {
+    setSubmitResult(null);
+    setErrors({});
+    setFormData({
+      name: '', email: '', phone: '',
+      attendance: 'yes', partySize: 1, partyNames: [], foodSelections: [], dietaryRestrictions: [],
+      specialRequests: '', customFood: '', customFoodCategory: 'sides',
+    });
+    setStep(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  if (submitResult?.success && submitResult.data) {
+    return <RSVPSuccess data={submitResult.data} onAnother={resetForm} />;
+  }
+
   return (
     <>
       <section id="rsvp" className="relative min-h-screen pt-12 pb-12">
@@ -354,6 +394,7 @@ export const RSVPForm = () => {
               ))}
             </div>
             <div className="text-center text-sm text-xmas-cream/70">Step {step} of 3: {steps[step - 1].title}</div>
+            <div className="mb-2 p-2 rounded-xl bg-xmas-gold/10 border border-xmas-gold/30 text-sm text-xmas-cream">{DISH_GUIDANCE}</div>
           </div>
 
           <form onSubmit={handleSubmit} className="card space-y-5" noValidate>
@@ -510,7 +551,7 @@ export const RSVPForm = () => {
                       {/* Required dishes message */}
                       <div className={`p-4 rounded-xl border text-sm ${(errors.food && short) || errors.dishName ? 'bg-red-900/30 border-red-500/50 text-red-300' : 'bg-xmas-gold/10 border-xmas-gold/30 text-xmas-cream'}`}>
                         <strong>Required:</strong> {needed} {needed === 1 ? 'dish' : 'different dishes'} for your party of {formData.partySize}
-                        {' '}(appetizer, hot veggie, starch, or dessert). Selected: {have}/{needed}
+                        {' '}(appetizer, protein, hot veggie, starch, or dessert). Selected: {have}/{needed}
                         {errors.food && short && <p className="mt-1">{errors.food}</p>}
                         {errors.dishName && <p className="mt-1">{errors.dishName}</p>}
                       </div>
@@ -546,11 +587,13 @@ export const RSVPForm = () => {
                                 key={idx}
                                 suggestion={suggestion}
                                 onUse={() => {
-                                  const slot = category.options.find(opt =>
+                                  const free = category.options.filter(opt =>
                                     !formData.foodSelections.some(f => f.id === opt.id) &&
                                     !isHostProvided({ ...opt, category: category.id }) &&
-                                    getFoodBringers({ ...opt, category: category.id }).length === 0
+                                    getFoodBringers({ ...opt, category: category.id }).filter(b => !b.isMe).length === 0
                                   );
+                                  // Slots with keywords (Protein: fish / chicken / tofu) only take matching ideas
+                                  const slot = free.find(opt => opt.keywords && opt.keywords.some(k => suggestion.toLowerCase().includes(k))) || free.find(opt => !opt.keywords);
                                   if (slot) addFoodWithDish({ ...slot, category: category.id }, suggestion);
                                 }}
                               />
@@ -568,7 +611,9 @@ export const RSVPForm = () => {
                           const bringers = getFoodBringers(foodWithCategory);
                           const hostProvided = isHostProvided(foodWithCategory);
                           const recipeData = getRecipeData(foodWithCategory);
-                          const isTaken = bringers.length > 0;
+                          const takenByOthers = bringers.filter(b => !b.isMe);
+                          const isTaken = takenByOthers.length > 0;
+                          const isMineSaved = bringers.some(b => b.isMe);
                           const isDisabled = isTaken || hostProvided;
                           const dishName = selectedFood?.dishName || '';
 
@@ -577,6 +622,18 @@ export const RSVPForm = () => {
 
                           return (
                             <div key={food.id} className="relative group">
+                              {isTaken && (
+                                <div className="absolute top-2 right-2 z-10 max-w-[80%] bg-xmas-green text-xmas-night px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1 shadow">
+                                  <UsersIcon className="w-3 h-3 flex-shrink-0" />
+                                  <span className="truncate">TAKEN - {takenByOthers[0].name}</span>
+                                </div>
+                              )}
+                              {(isSelected || isMineSaved) && !isTaken && (
+                                <div className="absolute top-2 right-2 z-10 bg-xmas-gold text-xmas-night px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1 shadow">
+                                  <Check className="w-3 h-3" />
+                                  <span>YOURS</span>
+                                </div>
+                              )}
                               <label className={`block cursor-pointer rounded-lg border-2 transition-all overflow-hidden ${isSelected ? 'border-xmas-gold bg-xmas-gold/10' : isDisabled ? 'border-xmas-darkred/30 bg-xmas-night/50 opacity-60 cursor-not-allowed' : 'border-xmas-darkred/30 hover:border-xmas-gold/50'}`}>
                                 <input
                                   type="checkbox"
@@ -649,7 +706,7 @@ export const RSVPForm = () => {
                                             type="text"
                                             value={dishName}
                                             onChange={(e) => updateDishName(food.id, e.target.value)}
-                                            placeholder={category.dishPlaceholder || 'Name your dish'}
+                                            placeholder={food.dishPlaceholder || category.dishPlaceholder || 'Name your dish'}
                                             className="w-full px-3 py-1.5 bg-xmas-night/50 border border-xmas-gold/30 rounded-lg text-xmas-cream placeholder-xmas-cream/40 text-sm focus:outline-none focus:border-xmas-gold focus:ring-1 focus:ring-xmas-gold"
                                             maxLength={50}
                                           />

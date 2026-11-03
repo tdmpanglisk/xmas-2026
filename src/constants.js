@@ -144,10 +144,11 @@ export const FOOD_CATEGORIES = [
     name: 'Appetizer',
     icon: '🥟',
     dishPlaceholder: 'e.g., Spam Musubi or Coconut Shrimp',
-    // 2 slots available
+    // 3 slots available
     options: [
-      { id: 'appetizer-1', name: 'Appetizer 1', serves: 8 },
-      { id: 'appetizer-2', name: 'Appetizer 2', serves: 8 },
+      { id: 'appetizer-1', name: 'Appetizer 1', serves: 30 },
+      { id: 'appetizer-2', name: 'Appetizer 2', serves: 30 },
+      { id: 'appetizer-3', name: 'Appetizer 3', serves: 30 },
     ],
     // Optional recipe suggestions for inspiration
     recipeSuggestions: [
@@ -162,14 +163,42 @@ export const FOOD_CATEGORIES = [
     ],
   },
   {
+    id: 'proteins',
+    name: 'Protein',
+    icon: '🍗',
+    dishPlaceholder: 'e.g., Huli Huli Chicken',
+    // 3 slots available - one each of fish, chicken and hot tofu.
+    // "keywords" make the "Use this dish" button put an idea into the matching slot.
+    options: [
+      { id: 'protein-pig', name: 'Pig', serves: 30, keywords: ['pig'], dishPlaceholder: 'e.g. Pig' },
+      { id: 'protein-fish', name: 'Protein - Fish', serves: 30, keywords: ['fish', 'mahi', 'salmon', 'ahi', 'tuna', 'cod'], dishPlaceholder: 'e.g., Grilled Mahi-Mahi' },
+      { id: 'protein-chicken', name: 'Protein - Chicken', serves: 30, keywords: ['chicken'], dishPlaceholder: 'e.g., Huli Huli Chicken' },
+      { id: 'protein-tofu', name: 'Protein - Hot Tofu', serves: 30, keywords: ['tofu'], dishPlaceholder: 'e.g., Crispy Garlic Tofu' },
+    ],
+    recipeSuggestions: [
+      'Grilled Mahi-Mahi with Macadamia Nut Crust',
+      'Furikake-Crusted Ahi Steaks',
+      'Miso-Glazed Salmon',
+      'Baked Teriyaki Salmon',
+      'Huli Huli Chicken (Grilled Pineapple Glaze)',
+      'Shoyu Chicken',
+      'Chicken Katsu with Tonkatsu Sauce',
+      'Pineapple Teriyaki Chicken Skewers',
+      'Vegetarian Lau Lau (Tofu, Sweet Potato, Taro Leaf)',
+      'Crispy Garlic Tofu with Sweet Chili Sauce',
+      'Teriyaki Tofu Stir-Fry',
+      'Spicy Braised Tofu',
+    ],
+  },
+  {
     id: 'hot-veggie',
     name: 'Hot Veggie',
     icon: '🥦',
     dishPlaceholder: 'e.g., Garlic Butter Green Beans',
     // 2 slots available
     options: [
-      { id: 'hot-veggie-1', name: 'Hot Veggie 1', serves: 10 },
-      { id: 'hot-veggie-2', name: 'Hot Veggie 2', serves: 10 },
+      { id: 'hot-veggie-1', name: 'Hot Veggie 1', serves: 30 },
+      { id: 'hot-veggie-2', name: 'Hot Veggie 2', serves: 30 },
     ],
     recipeSuggestions: [
       'Garlic Butter Green Beans with Almonds',
@@ -189,8 +218,8 @@ export const FOOD_CATEGORIES = [
     dishPlaceholder: 'e.g., Garlic Butter Rice or Baked Taro',
     // 2 slots available
     options: [
-      { id: 'starch-1', name: 'Starch 1', serves: 12 },
-      { id: 'starch-2', name: 'Starch 2', serves: 12 },
+      { id: 'starch-1', name: 'Starch 1', serves: 30 },
+      { id: 'starch-2', name: 'Starch 2', serves: 30 },
     ],
     recipeSuggestions: [
       'Hawaiian Sweet Bread (Portuguese Style)',
@@ -212,8 +241,8 @@ export const FOOD_CATEGORIES = [
     dishPlaceholder: 'e.g., Haupia Squares or Butter Mochi',
     // 2 slots available
     options: [
-      { id: 'dessert-1', name: 'Dessert 1', serves: 12 },
-      { id: 'dessert-2', name: 'Dessert 2', serves: 12 },
+      { id: 'dessert-1', name: 'Dessert 1', serves: 30 },
+      { id: 'dessert-2', name: 'Dessert 2', serves: 30 },
     ],
     recipeSuggestions: [
       'Haupia (Coconut Pudding Squares)',
@@ -232,6 +261,8 @@ export const FOOD_CATEGORIES = [
 
 // Potluck note for guests
 export const HAWAIIAN_TIP = 'Make it Hawaiian-style - think kalua pig, poke, haupia, malasadas, poi, lomi salmon, or any tropical twist!';
+
+export const DISH_GUIDANCE = "🍽️ Potluck guidance: Each couple who are both over 18 should bring a dish as contribution to the Mah Xmas. If you're signing up as four 18+ people, please select two options.";
 
 export const POTLUCK_NOTE = '📝 Pick a slot and bring your own dish - recipes are optional!<br>🚫 No salads allowed, please.<br>💡 Open "Recipe Ideas" for inspiration and recipe links.<br>🌺 Tip: ' + HAWAIIAN_TIP;
 
@@ -739,6 +770,46 @@ export const RECIPE_DATA = {
     variations: [],
     notes: HAWAIIAN_TIP,
     dietaryTags: [],
+  },
+  'appetizer-3': {
+    name: 'Appetizer 3',
+    providedBy: '',
+    isHostProvided: false,
+    description: 'Bring your favorite appetizer or pupu to share! Recipe ideas available when you sign up.',
+    recipes: [],
+    variations: [],
+    notes: HAWAIIAN_TIP,
+    dietaryTags: [],
+  },
+  'protein-fish': {
+    name: 'Protein - Fish',
+    providedBy: '',
+    isHostProvided: false,
+    description: 'Bring a hot fish dish to share! Recipe ideas available when you sign up.',
+    recipes: [],
+    variations: [],
+    notes: HAWAIIAN_TIP,
+    dietaryTags: [],
+  },
+  'protein-chicken': {
+    name: 'Protein - Chicken',
+    providedBy: '',
+    isHostProvided: false,
+    description: 'Bring a hot chicken dish to share! Recipe ideas available when you sign up.',
+    recipes: [],
+    variations: [],
+    notes: HAWAIIAN_TIP,
+    dietaryTags: [],
+  },
+  'protein-tofu': {
+    name: 'Protein - Hot Tofu',
+    providedBy: '',
+    isHostProvided: false,
+    description: 'Bring a hot tofu dish to share! Great for vegetarian guests. Recipe ideas available when you sign up.',
+    recipes: [],
+    variations: [],
+    notes: HAWAIIAN_TIP,
+    dietaryTags: ['vegetarian', 'vegan'],
   },
   'hot-veggie-1': {
     name: 'Hot Veggie 1',

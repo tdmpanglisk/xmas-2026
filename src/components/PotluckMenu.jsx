@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, ChevronRight, ExternalLink, BookOpen, Sparkles, Users as UsersIcon, Star, RefreshCw, Shield, Leaf } from 'lucide-react';
-import { FOOD_CATEGORIES, DIETARY_OPTIONS, RECIPE_DATA, POTLUCK_NOTE, HAWAIIAN_TIP } from '../constants';
+import { FOOD_CATEGORIES, DIETARY_OPTIONS, RECIPE_DATA, POTLUCK_NOTE, HAWAIIAN_TIP, DISH_GUIDANCE } from '../constants';
 import { ChristmasBackground } from './ChristmasBackground';
 import { SuggestionChip } from './SuggestionChip';
 import { getAllRSVPs, syncFromGoogleSheets } from '../utils/storage';
@@ -119,6 +119,9 @@ export const PotluckMenu = () => {
             Click items for recipes, variations & who's bringing it.
           </p>
         </div>
+
+        {/* Dish guidance */}
+        <div className='mb-4 p-4 rounded-xl bg-xmas-gold/10 border border-xmas-gold/30 text-sm text-xmas-cream'>{DISH_GUIDANCE}</div>
 
         {/* Potluck Note */}
         <div className='mb-4 p-4 rounded-xl bg-xmas-green/10 border border-xmas-green/30 text-xmas-cream'>
@@ -300,7 +303,7 @@ export const PotluckMenu = () => {
 
               {(() => {
                 const cat = FOOD_CATEGORIES.find(c => c.name === selectedFood.category);
-                const ideas = cat?.recipeSuggestions || [];
+                const ideas = (cat?.recipeSuggestions || []).filter(s => !selectedFood.food.keywords || selectedFood.food.keywords.some(k => s.toLowerCase().includes(k)));
                 return ideas.length > 0 && !(selectedFood.recipeData?.recipes?.length > 0) ? (
                   <div className='mb-6 bg-xmas-night/50 border border-xmas-darkred/30 rounded-xl p-4'>
                     <h3 className='flex items-center space-x-2 text-xmas-gold mb-3'>
