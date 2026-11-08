@@ -126,7 +126,7 @@ export const Hero = () => {
               </h1>
               <div className="inline-flex items-center space-x-2 bg-xmas-gold/20 border border-xmas-gold/40 px-3 py-1.5 rounded-full text-xmas-gold font-semibold text-xs sm:text-sm">
                 <span>✨</span>
-                <span>Hosted at Annie, Tran and Lulu's</span>
+                <span>Hosted by Annie, Tran and Lulu's</span>
                 <span>✨</span>
               </div>
             </div>

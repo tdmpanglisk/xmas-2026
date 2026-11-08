@@ -128,7 +128,7 @@ export const Hero = () => {
               </h1>
               <div className="inline-flex items-center space-x-2 bg-xmas-gold/20 border border-xmas-gold/40 px-2.5 py-0.5 rounded-full text-xmas-gold font-semibold text-[10px] sm:text-xs">
                 <span>✨</span>
-                <span>Hosted at Annie, Tran and Lulu's</span>
+                <span>Hosted by Annie, Tran and Lulu's</span>
                 <span>✨</span>
               </div>
             </div>
